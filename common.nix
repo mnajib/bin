@@ -144,6 +144,15 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
     enableSshSupport = true;
   };
 
+  services.xscreensaver = {
+    enable = true;
+    settings = {
+      mode = "random";
+      lock = false;
+      fadeTicks = 20;
+    };
+  };
+
   home.file = {
 
     ".tmux.conf" = {
