@@ -41,6 +41,9 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
     pkgs.zoom-us
   ];
 
+  # ~/.Xresources
+  #xresources.extraConfig = builtins.readFile ./src/.Xresources;
+
   programs.bash = {
     enable = true;
 
@@ -153,6 +156,8 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
     };
 
     #".profile".source = src/.profile;
+
+    ".Xdefaults".source = src/.Xdefaults;
 
     #".config/kak" = {
     #  source = ./src/.config/kak;
