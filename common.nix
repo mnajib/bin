@@ -86,12 +86,13 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
     bashrcExtra = ''
     umask 0002
     export EDITOR='kak'
-    eval "$(direnv hook bash)"
     '';
 
     #logoutExtra = ''
     #'';
   };
+
+  programs.direnv = { enable = true; };
 
   programs.command-not-found.enable = true;
 
