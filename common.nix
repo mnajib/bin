@@ -19,8 +19,8 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
 
   # Home Manager needs a bit of information about you and the
   # paths it should manage.
-  home.username = "najib";#"$USER";
-  home.homeDirectory = "/home/najib";#"$HOME";
+  home.username = "naqib"; #"najib";#"$USER";
+  home.homeDirectory = "/home/naqib"; #"/home/najib";#"$HOME";
 
   home.packages = [
     pkgs.htop
@@ -65,13 +65,14 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
 	emacs = "emacs -nw";
 	la = "ls -Fa";
 	p = "pwd";
+	a = "alias";
     };
 
     # Extra commands that should be run when initializing a login shell.
     # ~/.profile
     profileExtra = ''
     umask 0002
-    export EDITOR='kak'
+    export EDITOR='nano'
     . ~/.bashrc
     '';
 
@@ -85,7 +86,7 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
     # Note that these commands will be run even in non-interactive shells.
     bashrcExtra = ''
     umask 0002
-    export EDITOR='kak'
+    export EDITOR='nano'
     '';
 
     #logoutExtra = ''
@@ -135,8 +136,8 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
   programs.git = {
     enable = true;
     package = pkgs.gitAndTools.gitFull;
-    userName = "Najib Ibrahim";
-    userEmail = "mnajib@gmail.com";
+    userName = "Naqib Najib";
+    userEmail = "m.naqib.bin.m.najib@gmail.com";
   };
 
   services.gpg-agent = {
@@ -167,7 +168,7 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
 
     #".profile".source = src/.profile;
 
-    ".Xdefaults".source = src/.Xdefaults;
+    #".Xdefaults".source = src/.Xdefaults;
 
     #".config/kak" = {
     #  source = ./src/.config/kak;

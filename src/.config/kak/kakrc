@@ -6,7 +6,7 @@
 # ██║  ██╗██║  ██║██║  ██╗╚██████╔╝╚██████╔╝██║ ╚████║███████╗
 # ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═══╝╚══════╝
 
-colorscheme ayu-dark
+#colorscheme ayu-dark
 
 add-highlighter global/ number-lines -hlcursor
 add-highlighter global/ show-whitespaces
