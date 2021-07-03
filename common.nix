@@ -31,9 +31,15 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
     pkgs.fortune
     pkgs.mgba
 
+    #pkgs.git
+
     #pkgs.kakoune
     pkgs.neovim
     #pkgs.emacs
+
+    pkgs.ranger
+    pkgs.nnn
+    pkgs.broot
 
     pkgs.libreoffice
     pkgs.wpsoffice
@@ -135,12 +141,40 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
     extraConfig = builtins.readFile ./src/.config/kak/kakrc;
   };
 
-  programs.git = {
-    enable = true;
-    package = pkgs.gitAndTools.gitFull;
-    userName = "Naqib Najib";
-    userEmail = "m.naqib.bin.m.najib@gmail.com";
-  };
+  #programs.git = {
+  #    enable = true;
+  #    package = pkgs.gitAndTools.gitFull;
+  #    userName = "Najib Ibrahim";
+  #    userEmail = "mnajib@gmail.com";
+  #    aliases = {
+  #        co = "checkout";
+  #        ci = "commit";
+  #        st = "status";
+  #        br = "branch";
+  #        #hist = "log --pretty=format:'%C(yellow)%h%Cred%d%Creset - %C(cyan)%an %Creset: %s %Cgreen(%cr)' --graph --date=short --all";
+  #        hist = "log --pretty=format:'%C(yellow)%h%Cred%d%Creset - %C(cyan)%an %Creset: %s %Cgreen(%cd)' --graph --date=short --all";
+  #        histp = "log --pretty=format:'%C(yellow)%h%Cred%d%Creset - %C(cyan)%an %Creset: %s %Cgreen(%cd)' --graph --date=short --all -p";
+  #        type = "cat-file -t";
+  #        dump = "cat-file -p";
+  #        branchall = "branch -a -vv";
+  #    }
+  #    extraConfig = {
+  #        core = {
+  #            editor = "vim";
+  #            excludesfile = "~/.gitignore";
+  #            whitespace = "trailing-space,space-before-tab";
+  #        };
+  #        merge = {
+  #            tool = "vimdiff";
+  #        };
+  #        color = {
+  #            ui = "auto";
+  #            diff = "auto";
+  #            status = "auto";
+  #            branch = "auto";
+  #        };
+  #    };
+  #};
 
   services.gpg-agent = {
     enable = true;
@@ -176,6 +210,16 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
     #  source = ./src/.config/kak;
     #  recursive = true;
     #};
+
+    ".config/ranger" = {
+      source = ./src/.config/ranger;
+      recursive = true;
+    };
+
+    ".config/git" = {
+      source = ./src/.config/git;
+      recursive = true;
+    };
 
     ".config/awesome" = {
       source = ./src/.config/awesome;
