@@ -10,7 +10,7 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
   nixpkgs.config = {
     allowUnfree = true;
   };
-  
+
   # Let Home Manager install and manage itself.
   programs.home-manager = {
     enable = true;
@@ -19,20 +19,22 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
 
   # Home Manager needs a bit of information about you and the
   # paths it should manage.
-  home.username = "naqib"; #"najib";#"$USER";
-  home.homeDirectory = "/home/naqib"; #"/home/najib";#"$HOME";
+  home.username = "najib"; #"najib";#"$USER";
+  home.homeDirectory = "/home/najib"; #"/home/najib";#"$HOME";
 
   home.packages = [
     pkgs.htop
     pkgs.atop
-    
+
+    pkgs.gnome.gnome-disk-utility
+
     pkgs.fortune
     pkgs.mgba
 
     #pkgs.kakoune
     pkgs.neovim
     #pkgs.emacs
-    
+
     pkgs.libreoffice
     pkgs.wpsoffice
 
@@ -53,7 +55,7 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
     # Environment variable t...
     #sessionVariables = {
     #};
-    
+
     shellAliases = {
 	aoeu = "setxkbmap us";
 	asdf = "setxkbmap dvorak";
@@ -130,7 +132,7 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
 
   programs.kakoune = {
     enable = true;
-    extraConfig = builtins.readFile ./src/.config/kak/kakrc; 
+    extraConfig = builtins.readFile ./src/.config/kak/kakrc;
   };
 
   programs.git = {
