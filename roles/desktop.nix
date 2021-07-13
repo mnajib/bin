@@ -6,9 +6,6 @@ with builtins;
 with lib;
 with import <home-manager/modules/lib/dag.nix> { inherit lib; };
 
-# XXX:
-#with import Network.HostName;
-
 {
   nixpkgs.config = {
     allowUnfree = true;
@@ -20,47 +17,28 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
     path = "...";
   };
 
-  # INFO: Moved to seperate file
   # Home Manager needs a bit of information about you and the
   # paths it should manage.
-  #home.username = "najib"; #"najib";#"$USER";
-  #home.homeDirectory = "/home/najib"; #"/home/najib";#"$HOME";
-  #hostname = getHostName;
+  home.username = "najib";#"$USER";
+  home.homeDirectory = "/home/najib";#"$HOME";
 
   home.packages = [
     pkgs.htop
     pkgs.atop
 
-    pkgs.gnome.gnome-disk-utility
-
     pkgs.fortune
     pkgs.mgba
 
-    #pkgs.git
-    pkgs.broot # something like tree command
-    pkgs.exa # can be alias to ls command
-
     #pkgs.kakoune
     pkgs.neovim
-    pkgs.vis
     #pkgs.emacs
-
-    pkgs.ranger
-    pkgs.nnn
-    pkgs.broot
 
     pkgs.libreoffice
     pkgs.wpsoffice
 
-    pkgs.qutebrowser
     pkgs.brave # web browser
     pkgs.tdesktop # Telegram
-    pkgs.qtox
     pkgs.zoom-us
-    pass # CLI password manager
-    #pkgs.gitsi
-
-    pkgs.webtorrent_desktop
   ];
 
   # ~/.Xresources
@@ -87,7 +65,6 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
 	emacs = "emacs -nw";
 	la = "ls -Fa";
 	p = "pwd";
-	a = "alias";
     };
 
     # Extra commands that should be run when initializing a login shell.
@@ -95,12 +72,7 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
     profileExtra = ''
     umask 0002
     export EDITOR='kak'
-    #export EDITOR='nano'
-    export SHELL='fish'
-
-    #. ~/.bashrc
-    #. ~/.bash_profile
-    . ~/.profile
+    . ~/.bashrc
     '';
 
     # Extra commands that should be run when initializing an interactive shell.
@@ -114,10 +86,6 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
     bashrcExtra = ''
     umask 0002
     export EDITOR='kak'
-    #export EDITOR='nano'
-    export SHELL='fish'
-
-    #. ~/.bashrc
     eval "$(direnv hook bash)"
     '';
 
@@ -125,13 +93,7 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
     #'';
   };
 
-  programs.direnv = { enable = true; };
-
   programs.command-not-found.enable = true;
-
-  programs.broot = {
-    enable = true;
-  };
 
   programs.vim = {
     enable = true;
@@ -169,40 +131,12 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
     extraConfig = builtins.readFile ./src/.config/kak/kakrc;
   };
 
-  #programs.git = {
-  #    enable = true;
-  #    package = pkgs.gitAndTools.gitFull;
-  #    userName = "Najib Ibrahim";
-  #    userEmail = "mnajib@gmail.com";
-  #    aliases = {
-  #        co = "checkout";
-  #        ci = "commit";
-  #        st = "status";
-  #        br = "branch";
-  #        #hist = "log --pretty=format:'%C(yellow)%h%Cred%d%Creset - %C(cyan)%an %Creset: %s %Cgreen(%cr)' --graph --date=short --all";
-  #        hist = "log --pretty=format:'%C(yellow)%h%Cred%d%Creset - %C(cyan)%an %Creset: %s %Cgreen(%cd)' --graph --date=short --all";
-  #        histp = "log --pretty=format:'%C(yellow)%h%Cred%d%Creset - %C(cyan)%an %Creset: %s %Cgreen(%cd)' --graph --date=short --all -p";
-  #        type = "cat-file -t";
-  #        dump = "cat-file -p";
-  #        branchall = "branch -a -vv";
-  #    }
-  #    extraConfig = {
-  #        core = {
-  #            editor = "vim";
-  #            excludesfile = "~/.gitignore";
-  #            whitespace = "trailing-space,space-before-tab";
-  #        };
-  #        merge = {
-  #            tool = "vimdiff";
-  #        };
-  #        color = {
-  #            ui = "auto";
-  #            diff = "auto";
-  #            status = "auto";
-  #            branch = "auto";
-  #        };
-  #    };
-  #};
+  programs.git = {
+    enable = true;
+    package = pkgs.gitAndTools.gitFull;
+    userName = "Najib Ibrahim";
+    userEmail = "mnajib@gmail.com";
+  };
 
   services.gpg-agent = {
     enable = true;
@@ -219,48 +153,25 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
     };
   };
 
-  #----------------------------------------------------------------------------
   home.file = {
 
     ".tmux.conf" = {
     text = ''
-    set-option -g default-shell /run/current-system/sw/bin/fish # bash
+    set-option -g default-shell /run/current-system/sw/bin/bash
     set-window-option -g mode-keys vi
     set -g default-terminal "screen-256color"
     set -ga terminal-overrides ',screen-256color:Tc'
-
-    #set timeoutlen=1000 # Defalut 1000
-    set ttimeoutlen=50 # Default 50
-    #
-    #set -g escape-time 10
-    set -sg escape-time 10
-
-    set -g clock-mode-style 24
-    set -g history-limit 10000
     '';
     };
 
     #".profile".source = src/.profile;
 
-    #".Xdefaults".source = src/.Xdefaults;
+    ".Xdefaults".source = src/.Xdefaults;
 
     #".config/kak" = {
     #  source = ./src/.config/kak;
     #  recursive = true;
     #};
-
-    ".config/ranger" = {
-      source = ./src/.config/ranger;
-      recursive = true;
-    };
-
-    #".config/git" = {
-        #source = ./src/.config/git;
-        #recursive = true;
-    #};
-    ".gitconfig" = {
-     source = ./src/.gitconfig;
-    };
 
     ".config/awesome" = {
       source = ./src/.config/awesome;
@@ -273,20 +184,6 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
       rev = "9477093";
       sha256 = "0rfzf93b2v22iqsv84x76dy7h5rbkxqi4yy2ycmcgik4qb0crddp";
     };
-
-    #"./bin".source = fetchFromGitHub { #fetchGit {
-    #  owner = "mnajib";
-    #  repo = "home-manager-conf";
-    #};
-    #"./bin".source = fetchGit {
-      #url = "ssh://najib@mahirah:22/home/najib/GitRepos/bin.git";
-      #...
-    #};
-
-    #".fonts" = {
-    #  source = ./src/.fonts;
-    #  recursive = true;
-    #};
 
   };
 
