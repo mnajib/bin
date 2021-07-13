@@ -29,9 +29,6 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
     pkgs.fortune
     pkgs.mgba
 
-    pkgs.broot # something like tree command
-    pkgs.exa # can be alias to ls command
-
     #pkgs.kakoune
     pkgs.neovim
     #pkgs.emacs
@@ -41,11 +38,7 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
 
     pkgs.brave # web browser
     pkgs.tdesktop # Telegram
-    pkgs.qtox
     pkgs.zoom-us
-    #pkgs.gitsi
-
-    pkgs.webtorrent_desktop
   ];
 
   # ~/.Xresources
@@ -78,8 +71,7 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
     # ~/.profile
     profileExtra = ''
     umask 0002
-    #export EDITOR='kak'
-    export EDITOR='nano'
+    export EDITOR='kak'
     . ~/.bashrc
     '';
 
@@ -93,8 +85,7 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
     # Note that these commands will be run even in non-interactive shells.
     bashrcExtra = ''
     umask 0002
-    #export EDITOR='kak'
-    export EDITOR='nano'
+    export EDITOR='kak'
     eval "$(direnv hook bash)"
     '';
 
