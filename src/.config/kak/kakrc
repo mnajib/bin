@@ -6,10 +6,10 @@
 # ██║  ██╗██║  ██║██║  ██╗╚██████╔╝╚██████╔╝██║ ╚████║███████╗
 # ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═══╝╚══════╝
 
-colorscheme ayu-dark
+#colorscheme ayu-dark
 
 add-highlighter global/ number-lines -hlcursor
-add-highlighter global/ show-whitespaces
+#add-highlighter global/ show-whitespaces
 add-highlighter global/ regex \h+$ 0:Error # Highlight trailing whitespace
 
 set-option global tabstop 8 #4

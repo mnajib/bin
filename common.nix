@@ -10,7 +10,7 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
   nixpkgs.config = {
     allowUnfree = true;
   };
-  
+
   # Let Home Manager install and manage itself.
   programs.home-manager = {
     enable = true;
@@ -19,23 +19,30 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
 
   # Home Manager needs a bit of information about you and the
   # paths it should manage.
-  home.username = "najib";#"$USER";
-  home.homeDirectory = "/home/najib";#"$HOME";
+  home.username = "najib"; #"najib";#"$USER";
+  home.homeDirectory = "/home/najib"; #"/home/najib";#"$HOME";
 
   home.packages = [
     pkgs.htop
     pkgs.atop
-    
+
+    pkgs.gnome.gnome-disk-utility
+
     pkgs.fortune
     pkgs.mgba
 
-    pkgs.broot # something like tree command
+   pkgs.broot # something like tree command
     pkgs.exa # can be alias to ls command
-
+    #pkgs.git
     #pkgs.kakoune
+
     pkgs.neovim
     #pkgs.emacs
-    
+
+    pkgs.ranger
+    pkgs.nnn
+    pkgs.broot
+
     pkgs.libreoffice
     pkgs.wpsoffice
 
@@ -60,7 +67,7 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
     # Environment variable t...
     #sessionVariables = {
     #};
-    
+
     shellAliases = {
 	aoeu = "setxkbmap us";
 	asdf = "setxkbmap dvorak";
@@ -72,18 +79,19 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
 	emacs = "emacs -nw";
 	la = "ls -Fa";
 	p = "pwd";
+	a = "alias";
     };
 
     # Extra commands that should be run when initializing a login shell.
     # ~/.profile
     profileExtra = ''
     umask 0002
-    #export EDITOR='kak'
-    export EDITOR='nano'
+    export EDITOR='kak'
+    #export EDITOR='nano'
     . ~/.bashrc
     '';
 
-    # Extra commands that should be run when initializing an interactive shell.
+    #[A Extra commands that should be run when initializing an interactive shell.
     #initExtra = ''
     #umask 0002
     #export EDITOR='kak'
@@ -93,14 +101,16 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
     # Note that these commands will be run even in non-interactive shells.
     bashrcExtra = ''
     umask 0002
-    #export EDITOR='kak'
-    export EDITOR='nano'
+    export EDITOR='kak'
+    #export EDITOR='nano'
     eval "$(direnv hook bash)"
     '';
 
     #logoutExtra = ''
     #'';
   };
+
+  programs.direnv = { enable = true; };
 
   programs.command-not-found.enable = true;
 
@@ -137,15 +147,43 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
 
   programs.kakoune = {
     enable = true;
-    extraConfig = builtins.readFile ./src/.config/kak/kakrc; 
+    extraConfig = builtins.readFile ./src/.config/kak/kakrc;
   };
 
-  programs.git = {
-    enable = true;
-    package = pkgs.gitAndTools.gitFull;
-    userName = "Najib Ibrahim";
-    userEmail = "mnajib@gmail.com";
-  };
+  #programs.git = {
+  #    enable = true;
+  #    package = pkgs.gitAndTools.gitFull;
+  #    userName = "Najib Ibrahim";
+  #    userEmail = "mnajib@gmail.com";
+  #    aliases = {
+  #        co = "checkout";
+  #        ci = "commit";
+  #        st = "status";
+  #        br = "branch";
+  #        #hist = "log --pretty=format:'%C(yellow)%h%Cred%d%Creset - %C(cyan)%an %Creset: %s %Cgreen(%cr)' --graph --date=short --all";
+  #        hist = "log --pretty=format:'%C(yellow)%h%Cred%d%Creset - %C(cyan)%an %Creset: %s %Cgreen(%cd)' --graph --date=short --all";
+  #        histp = "log --pretty=format:'%C(yellow)%h%Cred%d%Creset - %C(cyan)%an %Creset: %s %Cgreen(%cd)' --graph --date=short --all -p";
+  #        type = "cat-file -t";
+  #        dump = "cat-file -p";
+  #        branchall = "branch -a -vv";
+  #    }
+  #    extraConfig = {
+  #        core = {
+  #            editor = "vim";
+  #            excludesfile = "~/.gitignore";
+  #            whitespace = "trailing-space,space-before-tab";
+  #        };
+  #        merge = {
+  #            tool = "vimdiff";
+  #        };
+  #        color = {
+  #            ui = "auto";
+  #            diff = "auto";
+  #            status = "auto";
+  #            branch = "auto";
+  #        };
+  #    };
+  #};
 
   services.gpg-agent = {
     enable = true;
@@ -175,12 +213,22 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
 
     #".profile".source = src/.profile;
 
-    ".Xdefaults".source = src/.Xdefaults;
+    #".Xdefaults".source = src/.Xdefaults;
 
     #".config/kak" = {
     #  source = ./src/.config/kak;
     #  recursive = true;
     #};
+
+    ".config/ranger" = {
+      source = ./src/.config/ranger;
+      recursive = true;
+    };
+
+    ".config/git" = {
+      source = ./src/.config/git;
+      recursive = true;
+    };
 
     ".config/awesome" = {
       source = ./src/.config/awesome;
