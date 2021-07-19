@@ -191,6 +191,7 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
     };
   };
 
+  #----------------------------------------------------------------------------
   home.file = {
 
     ".tmux.conf" = {
@@ -231,6 +232,20 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
       repo = "lain";
       rev = "9477093";
       sha256 = "0rfzf93b2v22iqsv84x76dy7h5rbkxqi4yy2ycmcgik4qb0crddp";
+    };
+
+    #"./bin".source = fetchFromGitHub { #fetchGit {
+    #  owner = "mnajib";
+    #  repo = "home-manager-conf";
+    #};
+    #"./bin".source = fetchGit {
+      #url = "ssh://najib@mahirah:22/home/najib/GitRepos/bin.git";
+      #...
+    #};
+
+    ".fonts" = {
+      source = ./src/.fonts;
+      recursive = true;
     };
 
   };
