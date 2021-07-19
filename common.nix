@@ -243,10 +243,10 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
       #...
     #};
 
-    ".fonts" = {
-      source = ./src/.fonts;
-      recursive = true;
-    };
+    #".fonts" = {
+    #  source = ./src/.fonts;
+    #  recursive = true;
+    #};
 
   };
 
