@@ -27,7 +27,7 @@ newTappingStatus=0
 if [ $ds == 0 ]; then
   echo "Current touch status: disable. We will enable it."
   newStatus=$enable
-  newTappingStatus=$disable  
+  newTappingStatus=$enable #XXX: $disable
   echo "Toggle status"
   xinput set-prop $d $de $newStatus
   xinput set-prop $d $df $newTappingStatus
@@ -37,7 +37,7 @@ elif [ $ds == 1 ]; then
   newTappingStatus=$disable
   echo "Toggle status"
   xinput set-prop $d $de $newStatus
-  #xinput set-prop $d $df $newTappingStatus
+  #xinput set-prop $d $df $newTappingStatus #XXX:
 fi
 
 # There should be one called 'Device Enabled'; at least mine has.
