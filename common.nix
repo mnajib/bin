@@ -105,6 +105,10 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
 
   programs.command-not-found.enable = true;
 
+  programs.broot = {
+    enable = true;
+  };
+
   programs.vim = {
     enable = true;
     extraConfig = builtins.readFile ./src/vim/vimrc; #vim/vimrc;
