@@ -45,9 +45,12 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
     pkgs.libreoffice
     pkgs.wpsoffice
 
+    pkgs.qutebrowser
     pkgs.brave # web browser
     pkgs.tdesktop # Telegram
     pkgs.zoom-us
+
+    pass # CLI password manager
   ];
 
   # ~/.Xresources
