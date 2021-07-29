@@ -35,6 +35,7 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
 
     #pkgs.kakoune
     pkgs.neovim
+    pkgs.vis
     #pkgs.emacs
 
     pkgs.ranger
