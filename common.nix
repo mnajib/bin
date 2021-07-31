@@ -208,6 +208,12 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
     set-window-option -g mode-keys vi
     set -g default-terminal "screen-256color"
     set -ga terminal-overrides ',screen-256color:Tc'
+
+    #set timeoutlen=1000 # Defalut 1000
+    set ttimeoutlen=50 # Default 50
+    #
+    #set -g escape-time 10
+    set -sg escape-time 10
     '';
     };
 
