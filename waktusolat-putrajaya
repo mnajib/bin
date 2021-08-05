@@ -1,4 +1,5 @@
 #!/run/current-system/sw/bin/env bash
+
 read_dom () {
     local IFS=\>
     read -d \< ENTITY CONTENT
