@@ -9,5 +9,5 @@
 #xrandr --newmode "1536x960_60.00"  121.25  1536 1624 1784 2032  960 963 969 996 -hsync +vsync
 
 #xrandr --addmode LVDS-1 1536x960_60.00
-
-xrandr --output LVDS-1 --mode  1536x960_60.00
+       
+xrandr --output LVDS --mode  1536x960_60.00
