@@ -1,4 +1,4 @@
-#!/run/current-system/sw/bin/env bash
+#!/usr/bin/env bash
 
 #xinput list
 #xinput list-props 15 | grep -i coordinate
