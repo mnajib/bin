@@ -7,4 +7,4 @@
 #gtts-cli -l id  "bunga itu warna merah dan bau wangi" | play -t mp3 -
 
 #nix-shell -p python39Packages.gtts sox --run 'gtts-cli -l id "Percubaan 1 2 3" | play -t mp3 -'
-nix-shell -p python39Packages.gtts sox --run "gtts-cli -l id \"${1}\" | play -t mp3 - "
+nix-shell -p python39Packages.gtts sox --run "gtts-cli -l id \"${1}\" | play -t mp3 --volume 0.5 - "
