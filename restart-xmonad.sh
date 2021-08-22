@@ -1,0 +1,1 @@
+/home/naqib/.xmonad/bin/restart-xmonad.sh
