@@ -1,8 +1,7 @@
 #!/run/current-system/sw/bin/env bash
 
 # First clear/rest xrandr settings
-xrandr -s0
-
+xrandr -s 0
 
 xrandr --output LVDS-1 --scale 1.125x1.125 --panning 1440x900
 

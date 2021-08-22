@@ -6,3 +6,5 @@ xrandr -s 0
 xrandr --output LVDS-1 --scale 1x1
 xrandr --output LVDS-1 --scale 1x1 --panning 1280x800
 
+# dpi 96
+#
