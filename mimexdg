@@ -1,0 +1,37 @@
+#!/run/current-system/sw/bin/env bash
+
+# To open
+$ xdg-open SAMPLE.txt
+
+# To query file assosiation
+$ xdg-mime query default $(xdg-mime query filetype SAMPLE.txt)
+
+## To change the default file association / default applcation to open the file
+##$ xdg-mime default emacs $(xdg-mime query filetype SAMPLE.txt)
+
+To make Thunar the default file-browser, i.e. the default application for opening folders.
+$ xdg-mime default Thunar.desktop inode/directory
+
+To use xpdf as the default PDF viewer:
+$ xdg-mime default xpdf.desktop application/pdf
+
+This should create an entry
+---
+[Default Applications]
+application/pdf=xpdf.desktop
+---
+in your local MIME database ~/.config/mimeapps.list.
+Your PDF files should be opened with xpdf now.
+
+For some reason xdg-mime did not modify defaults.list, but editing it manually (thanks to hints in this answer) did the trick.
+It seems defaults.list is now called mimeapps.list. See the Arch Wiki for a list of valid locations for mimeapps.list
+
+I found my local MIME database in ~/.config/mimeapps.list
+
+To query the current default, 
+use xdg-mime query default application/pdf
+
+to figure out mimetype of a certain file run 
+xdg-mime query filetype pathTofileYourInterestedIn
+
+update-mime-database
