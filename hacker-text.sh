@@ -1,0 +1,1 @@
+xterm -e "bash -c 'echo Naim dah solat ke belum? Tengok jam dah pukul berapa, jangan leka | nms -f red -a'; sleep 100"
