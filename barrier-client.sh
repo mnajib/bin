@@ -1,0 +1,1 @@
+barrierc --no-daemon --restart --name tv --enable-crypto 192.168.123.152
