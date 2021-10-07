@@ -11,3 +11,5 @@ single () {
     #xrandr --output HDMI-0 --off
     xrandr --output VGA-1 --off
 }
+
+dual
