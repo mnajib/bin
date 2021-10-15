@@ -12,11 +12,13 @@ dirs=( "03 Naqib" "04 Nur Nasuha" "05 Na'im" )
 c=0
 while [ $c -le ${#dirs[@]} ]
 do
-	# chmod directories
-	find "${p}/${dirs[${counter}]}" -type d -print0 | xargs -0 sudo chmod -v 775
+	echo "chmod directories ${p}/${dirs[${c}]} ..."
+	#find "${p}/${dirs[${c}]}" -type d -print0 | xargs -0 sudo chmod 775
+	find "${p}/${dirs[${c}]}" -type d -print0 | xargs -0 sudo chmod a+rwx
 
-	# chmod files
-	find "${p}/${dirs[${counter}]}" -type f -print0 | xargs -0 sudo chmod -v 664
+	echo "chmod files ${p}/${dirs[${c}]} ..."
+	#find "${p}/${dirs[${c}]}" -type f -print0 | xargs -0 sudo chmod 664
+	find "${p}/${dirs[${c}]}" -type f -print0 | xargs -0 sudo chmod a+rw
 
 	((c++))
 done
