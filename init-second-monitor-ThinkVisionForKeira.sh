@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 
-internal=LVDS-1
-external=VGA-1
+export DISPLAY=:0
+#export XAUTHORITY=/home/juliani/.Xauthority
+
+internal=LVDS-1 # right
+external=VGA-1  # left
+
+#dmode="$(cat /sys/class/drm/card0-VGA-1/status)"
 
 # set dual monitors
 dual () {
