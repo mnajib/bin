@@ -211,7 +211,7 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
 
     ".tmux.conf" = {
     text = ''
-    set-option -g default-shell /run/current-system/sw/bin/bash
+    set-option -g default-shell /run/current-system/sw/bin/fish # bash
     set-window-option -g mode-keys vi
     set -g default-terminal "screen-256color"
     set -ga terminal-overrides ',screen-256color:Tc'
