@@ -6,6 +6,9 @@ with builtins;
 with lib;
 with import <home-manager/modules/lib/dag.nix> { inherit lib; };
 
+# XXX:
+#with import Network.HostName;
+
 {
   nixpkgs.config = {
     allowUnfree = true;
@@ -21,6 +24,8 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
   # paths it should manage.
   home.username = "najib"; #"najib";#"$USER";
   home.homeDirectory = "/home/najib"; #"/home/najib";#"$HOME";
+
+  #hostname = getHostName;
 
   home.packages = [
     pkgs.htop
@@ -84,7 +89,8 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
     # ~/.profile
     profileExtra = ''
     umask 0002
-    export EDITOR='nano'
+    export EDITOR='kak'
+    export SHELL='fish'
     . ~/.bashrc
     '';
 
@@ -98,7 +104,8 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
     # Note that these commands will be run even in non-interactive shells.
     bashrcExtra = ''
     umask 0002
-    export EDITOR='nano'
+    export EDITOR='kak'
+    export SHELL='fish'
     '';
 
     #logoutExtra = ''
