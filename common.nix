@@ -221,6 +221,9 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
     #
     #set -g escape-time 10
     set -sg escape-time 10
+
+    set -g clock-mode-style 24
+    set -g history-limit 10000
     '';
     };
 
