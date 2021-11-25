@@ -1,16 +1,9 @@
 { ... }:
 
 {
-  imports = [
-      ./../common.nix
+  imports = [ ./../common.nix ];
 
-      # machine specific
-      # ...
-
-      # role specific
-      # ...
-
-      # user specific
-      # ...
-  ];
+  # Various options that are specific for this machine/user
+  home.username = "najib";
+  home.homeDirectory = "/home/najib";
 }

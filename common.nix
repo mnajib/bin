@@ -22,9 +22,9 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
 
   # Home Manager needs a bit of information about you and the
   # paths it should manage.
-  home.username = "najib"; #"najib";#"$USER";
-  home.homeDirectory = "/home/najib"; #"/home/najib";#"$HOME";
-
+  #home.username = "najib"; #"najib";#"$USER";
+  #home.homeDirectory = "/home/najib"; #"/home/najib";#"$HOME";
+  #
   #hostname = getHostName;
 
   home.packages = [
@@ -91,7 +91,10 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
     umask 0002
     export EDITOR='kak'
     export SHELL='fish'
-    . ~/.bashrc
+
+    #. ~/.bashrc
+    #. ~/.bash_profile
+    . ~/.profile
     '';
 
     # Extra commands that should be run when initializing an interactive shell.
@@ -106,6 +109,8 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
     umask 0002
     export EDITOR='kak'
     export SHELL='fish'
+
+    #. ~/.bashrc
     '';
 
     #logoutExtra = ''
