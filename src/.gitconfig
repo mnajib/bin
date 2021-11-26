@@ -18,6 +18,7 @@
 
 [core]
         editor = vim
+        #editor = kak
         excludesfile = ~/.gitignore
 
 [merge]
@@ -43,3 +44,6 @@
 	default-tracker = bugzilla.local
 	default-product = BCIS
 	default-component = Interface
+
+[branch "master"]
+	mergeoptions = --ff-only

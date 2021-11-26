@@ -10,7 +10,7 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
   nixpkgs.config = {
     allowUnfree = true;
   };
-  
+
   # Let Home Manager install and manage itself.
   programs.home-manager = {
     enable = true;
@@ -25,14 +25,14 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
   home.packages = [
     pkgs.htop
     pkgs.atop
-    
+
     pkgs.fortune
     pkgs.mgba
 
     #pkgs.kakoune
     pkgs.neovim
     #pkgs.emacs
-    
+
     pkgs.libreoffice
     pkgs.wpsoffice
 
@@ -53,7 +53,7 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
     # Environment variable t...
     #sessionVariables = {
     #};
-    
+
     shellAliases = {
 	aoeu = "setxkbmap us";
 	asdf = "setxkbmap dvorak";
@@ -128,7 +128,7 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
 
   programs.kakoune = {
     enable = true;
-    extraConfig = builtins.readFile ./src/.config/kak/kakrc; 
+    extraConfig = builtins.readFile ./src/.config/kak/kakrc;
   };
 
   programs.git = {

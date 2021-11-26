@@ -1,1 +1,7 @@
-tv-najib.nix
+{ ... }:
+
+{
+  imports = [
+      ./hosts/aisyah-najib.nix
+  ];
+}
