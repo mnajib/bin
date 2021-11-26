@@ -45,5 +45,5 @@
 	default-product = BCIS
 	default-component = Interface
 
-[branch "master"]
-	mergeoptions = --ff-only
+#[branch "master"]
+#	mergeoptions = --ff-only
