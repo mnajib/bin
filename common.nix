@@ -246,9 +246,12 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
       recursive = true;
     };
 
-    ".config/git" = {
-      source = ./src/.config/git;
-      recursive = true;
+    #".config/git" = {
+        #source = ./src/.config/git;
+        #recursive = true;
+    #};
+    ".gitconfig" = {
+     source = ./src/.gitconfig;
     };
 
     ".config/awesome" = {
