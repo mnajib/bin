@@ -104,7 +104,7 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
     . ~/.profile
     '';
 
-    #[A Extra commands that should be run when initializing an interactive shell.
+    # Extra commands that should be run when initializing an interactive shell.
     #initExtra = ''
     #umask 0002
     #export EDITOR='kak'
