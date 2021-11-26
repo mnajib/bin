@@ -20,11 +20,11 @@ with import <home-manager/modules/lib/dag.nix> { inherit lib; };
     path = "...";
   };
 
+  # INFO: Moved to seperate file
   # Home Manager needs a bit of information about you and the
   # paths it should manage.
   #home.username = "najib"; #"najib";#"$USER";
   #home.homeDirectory = "/home/najib"; #"/home/najib";#"$HOME";
-  #
   #hostname = getHostName;
 
   home.packages = [
