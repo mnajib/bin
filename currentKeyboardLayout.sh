@@ -1,4 +1,4 @@
-#!/run/current-system/sw/bin/env bash
+#!/usr/bin/env bash
 
 #xkbprint -color "${DISPLAY}" - | ps2pdf - > "${1}"
 #xkbprint -color "${DISPLAY}" -lg 4 - | ps2pdf - > myCurrentKeyboardLayout.pdf
@@ -13,3 +13,5 @@
 #gkbd-keyboard-display -g 2
 #gkbd-keyboard-display -g 3
 gkbd-keyboard-display -g 4
+
+setxkbmap -print
