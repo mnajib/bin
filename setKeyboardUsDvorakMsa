@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+# Virual core keyboard (default?)
+setxkbmap -layout us,us,msa -variant ,dvorak, -option "" # To reset the 'options'
+#setxkbmap -layout us,us,msa -variant ,dvorak, -option "grp:shift_caps_toggle" # barrier seam to not send this key strok.
+#setxkbmap -layout us,us,msa -variant ,dvorak, -option "grp:alt_shift_toggle" # XXX: will test this with barrier.
+setxkbmap -layout us,us,msa -variant ,dvorak, -option "grp:shift_caps_toggle,grp:alt_shift_toggle" # use both shortcut.
+
+# Virtual core XTEST keyboard: Workaround to work with barrier
+#setxkbmap -device `xinput list | grep "Virtual core XTEST keyboard" | sed -e 's/.\+=\([0-9]\+\).\+/\1/'` -layout us,us,msa -variant ,dvorak, -option "" # reset
+#setxkbmap -device `xinput list | grep "Virtual core XTEST keyboard" | sed -e 's/.\+=\([0-9]\+\).\+/\1/'` -layout us,us,msa -variant ,dvorak, -option "grp:shift_caps_toggle,grp:alt_shift_toggle" # use both shortcut.
+setxkbmap -device `xinput list --id-only "Virtual core XTEST keyboard"` -layout us,us,msa -variant ,dvorak, -option "" # reset
+setxkbmap -device `xinput list --id-only "Virtual core XTEST keyboard"` -layout us,us,msa -variant ,dvorak, -option "grp:shift_caps_toggle,grp:alt_shift_toggle" # use both shortcut.
+
+#setxkbmap -help
+#setxkbmap -print
+#setxkbmap -query
+
+#setxkbmap -device `xinput list | grep "Virtual core keyboard" | sed -e 's/.\+=\([0-9]\+\).\+/\1/' -print
+#setxkbmap -device `xinput list | grep "Virtual core XTEST keyboard" | sed -e 's/.\+=\([0-9]\+\).\+/\1/' -print
+#setxkbmap -device $(xinput list --id-only "Virtual core XTEST keyboard") -query
+
+# Note:
+#
+# To list grp toggle options
+#    grep "grp:.*toggle" /usr/share/X11/xkb/rules/base.lst
+#
+# For test with barrier
+#    Wrong keyboard layout between Server and Client
+#    I think this happens because the XTEST extension is used to deliver the keystrokes, and it has its own virtual keyboard. You can see this if you run:
+#    xinput list
+#    xinput list --id-only "Virtual core XTEST keyboard"
+#
