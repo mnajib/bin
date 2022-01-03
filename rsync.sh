@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+<<<<<<< HEAD
 function sync1 () {
     rsync -r -t -p -o -g -x -v --progress --ignore-existing -u -l -H -D -z -s \
         -e ssh \
@@ -43,3 +44,29 @@ function sync4 () {
 #sync2
 #sync3
 #sync4
+=======
+SRC="/home/najib/_e-books"
+DEST="najib@mahirah:/home/najib/Documents"
+#rsync -r -t -p -o -g -x -v --progress -l -H -i -s "$SRC" "$DEST"
+rsync -r -t -p -o -g -x -v --progress -l -H -z -i -s "${SRC}" "${DEST}"
+
+SRC="/home/najib/_e-books_2"
+DEST="najib@mahirah:/home/najib/Documents"
+rsync -r -t -p -o -g -x -v --progress -l -H -z -i -s "${SRC}" "${DEST}"
+
+SRC="/home/najib/_e-books_3"
+DEST="najib@mahirah:/home/najib/Documents"
+rsync -r -t -p -o -g -x -v --progress -l -H -z -i -s "${SRC}" "${DEST}"
+
+SRC="/home/najib/_e-books_4"
+DEST="najib@mahirah:/home/najib/Documents"
+rsync -r -t -p -o -g -x -v --progress -l -H -z -i -s "${SRC}" "${DEST}"
+
+SRC="/home/najib/_e-books_5 For kids"
+DEST="najib@mahirah:/home/najib/Documents"
+rsync -r -t -p -o -g -x -v --progress -l -H -z -i -s "${SRC}" "${DEST}"
+
+SRC="/home/najib/_e-books_6"
+DEST="najib@mahirah:/home/najib/Documents"
+rsync -r -t -p -o -g -x -v --progress -l -H -z -i -s "${SRC}" "${DEST}"
+>>>>>>> 44aa5b0 (some changes)
