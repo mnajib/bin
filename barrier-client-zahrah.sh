@@ -5,4 +5,4 @@ server=192.168.123.152
 client=zahrah
 
 #barrierc --no-daemon --restart --name $client --enable-crypto $server
-barrierc --no-daemon --restart --name $client $server
+barrierc --no-daemon --restart --name $client --disable-crypto $server
