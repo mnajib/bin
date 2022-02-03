@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # Try disabling the libinput device.
 #xinput list
 d=`xinput list | grep -i touchpad | awk '{for(i=1;i<=NF;i++){ tmp=match($i, /id=[0-9]/); if(tmp){print $i} } }' | awk --field-separator== '{ print $2 }'`
