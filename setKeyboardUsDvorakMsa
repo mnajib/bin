@@ -25,6 +25,7 @@ setxkbmap -device `xinput list --id-only "Virtual core XTEST keyboard"` -layout 
 # To list grp toggle options
 #    grep "grp:.*toggle" /usr/share/X11/xkb/rules/base.lst
 #
+
 # For test with barrier
 #    Wrong keyboard layout between Server and Client
 #    I think this happens because the XTEST extension is used to deliver the keystrokes, and it has its own virtual keyboard. You can see this if you run:
