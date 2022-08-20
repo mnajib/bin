@@ -27,4 +27,5 @@ cd ~/.wine/drive_c/MyPrograms/Stardew.Valley.v1.5.4/Stardew\ Valley/
 #DISPLAY=:1 wine ./Stardew\ Valley.exe
 #DISPLAY=:1 wine ${PATH5}/Stardew\ Valley.exe
 #cd ${PATH5}
-DISPLAY=:1 wine ./Stardew\ Valley.exe
+DISPLAY=:1 
+#wine Stardew\ Valley.exe
