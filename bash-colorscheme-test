@@ -1,0 +1,122 @@
+#!/usr/bin/env bash
+#
+# ANSI color scheme script featuring Space Invaders
+#
+# Original: http://crunchbang.org/forums/viewtopic.php?pid=126921%23p126921#p126921
+# Modified by lolilolicon
+#
+
+#f=3 b=4
+#for j in f b; do
+#  for i in {0..7}; do
+#    printf -v $j$i %b "\e[${!j}${i}m"
+#  done
+#done
+
+#bold=$'\e[1m'
+#reset=$'\e[0m'
+
+DarkYellow=214		#ffaf00
+Yellow=220		#ffdf00
+LightYellow=227		#ffff5f
+
+DarkGreen=22		#005f00
+Green=34		#00af00
+LightGreen=46		#00ff00
+
+DarkBlue=24 #27		#005fff
+Blue=33			#0087ff
+LightBlue=39		#00afff
+
+DarkCyan=37		#008080
+Cyan=81 #014		#00ffff
+LightCyan=123 #87	#
+
+DarkMagenta=91		#
+Magenta=135		#
+LightMagenta=171	#
+
+DarkRed=88		#
+Red=124			#
+LightRed=160		#
+
+DarkGrey=238		#
+Grey=242		#
+LightGrey=245		#
+
+# Black (near black)
+Black=232		#
+
+# White (near white)
+White=255		#
+
+
+# Yellow
+printf "\e[0m"
+printf "Yellow\t"
+printf "\e[40;38;5;%sm%4d " "$DarkYellow" "$DarkYellow"
+printf "\e[40;38;5;%sm%4d " "$Yellow" "$Yellow"
+printf "\e[40;38;5;%sm%4d " "$LightYellow" "$LightYellow"
+printf "\n"
+
+# Green
+printf "\e[0m"
+printf "Green\t"
+printf "\e[40;38;5;%sm%4d " "$DarkGreen" "$DarkGreen"
+printf "\e[40;38;5;%sm%4d " "$Green" "$Green"
+printf "\e[40;38;5;%sm%4d " "$LightGreen" "$LightGreen"
+printf "\n"
+
+# Blue
+printf "\e[0m"
+printf "Blue\t"
+printf "\e[40;38;5;%sm%4d " "$DarkBlue" "$DarkBlue"
+printf "\e[40;38;5;%sm%4d " "$Blue" "$Blue"
+printf "\e[40;38;5;%sm%4d " "$LightBlue" "$LightBlue"
+printf "\n"
+
+# Cyan
+printf "\e[0m"
+printf "Cyan\t"
+printf "\e[40;38;5;%sm%4d " "$DarkCyan" "$DarkCyan"
+printf "\e[40;38;5;%sm%4d " "$Cyan" "$Cyan"
+printf "\e[40;38;5;%sm%4d " "$LightCyan" "$LightCyan"
+printf "\n"
+
+# Magenta
+printf "\e[0m"
+printf "Magenta\t"
+printf "\e[40;38;5;%sm%4d " "$DarkMagenta" "$DarkMagenta"
+printf "\e[40;38;5;%sm%4d " "$Magenta" "$Magenta"
+printf "\e[40;38;5;%sm%4d " "$LightMagenta" "$LightMagenta"
+printf "\n"
+
+# Red
+printf "\e[0m"
+printf "Red\t"
+printf "\e[40;38;5;%sm%4d " "$DarkRed" "$DarkRed"
+printf "\e[40;38;5;%sm%4d " "$Red" "$Red"
+printf "\e[40;38;5;%sm%4d " "$LightRed" "$LightRed"
+printf "\n"
+
+# Grey
+printf "\e[0m"
+printf "Grey\t"
+printf "\e[40;38;5;%sm%4d " "$DarkGrey" "$DarkGrey"
+printf "\e[40;38;5;%sm%4d " "$Grey" "$Grey"
+printf "\e[40;38;5;%sm%4d " "$LightGrey" "$LightGrey"
+printf "\n"
+
+# Black
+printf "\e[0m"
+printf "Black\t"
+printf "\e[40;38;5;%sm%4d " "$Black" "$Black"
+printf "\n"
+
+# White
+printf "\e[0m"
+printf "White\t"
+printf "\e[40;38;5;%sm%4d " "$White" "$White"
+printf "\n"
+
+printf "\e[0m"
