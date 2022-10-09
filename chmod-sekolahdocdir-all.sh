@@ -3,7 +3,7 @@
 #p=$1
 #p="/mnt/sekolahdocdir"
 p="/export/sekolahdocdir"
-dirs=( "03 Naqib" "04 Nur Nasuha" "05 Na'im" )
+dirs=( "02 Juliani" "03 Naqib" "04 Nur Nasuha" "05 Na'im" )
 
 #echo ${dirs[1]}
 #echo ${dirs[*]}
@@ -17,6 +17,9 @@ do
 
 	# chmod files
 	find "${p}/${dirs[${counter}]}" -type f -print0 | xargs -0 sudo chmod -v 664
+
+    # chown
+    #...
 
 	((c++))
 done
