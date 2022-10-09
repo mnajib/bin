@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
 
+LOGFILE='rsync.log'
+
 function sync0a(){
     local SRC=$1 #"/home/najib/_e-books"
     local DEST=$2 #"najib@mahirah:/home/najib/Documents"
     #rsync -r -t -p -o -g -x -v --progress -l -H -i -s "$SRC" "$DEST"
     rsync -r -t -p -o -g -x -v --progress -l -H -z -i -s "${SRC}" "${DEST}"
+    rsync -avz "${SRC}" "${DEST}" 2>&1 >> $LOGFILE
+
+    echo "Sync Completed at:`/bin/date`" >> $LOGFILE
 }
 
 function sync0(){
@@ -75,10 +80,38 @@ function sync4 () {
 	/home/najib
 }
 
+# From rsync-mahirah-dirs.sh
+function sync5() {
+    # rsync --dry-run --remove-source-files -azP \
+    #rsync --dry-run -avPu --ignore-existing \
+    rsync -avPu --ignore-existing \
+    --exclude bin \
+    --exclude .xmonad \
+    --exclude '.nix*' \
+    --exclude .cache \
+    --exclude .bash_history \
+    --exclude .gitconfig \
+    --exclude .nix-defexpr \
+    --exclude .minetest \
+    /home/najib.mahirah.bak-2021-11-23/ \
+    /home/najib
+}
+
+# From rsync-mahirah-tv.sh
+function sync6(){
+    rsync -azP \
+    --exclude /home/najib/bin \
+    --exclude /home/najib/.xmonad \
+    --exclude '/home/najib/.nix*' \
+    --exclude /home/najib/.cache \
+    --exclude /home/najib/.bash_history \
+    --exclude /home/najib/.gitconfig \
+    najib@mahirah:/home/najib \
+    /home
+}
+
 #sync0
 #sync1
 #sync2
 #sync3
 #sync4
-
-
