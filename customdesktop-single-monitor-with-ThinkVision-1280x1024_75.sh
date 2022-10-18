@@ -31,6 +31,14 @@ xrandr --output VGA-1 --mode "1280x1024_75.00"
 
 #-------------------------------------------------------
 
+# test scale and pan; but blur
+#xrandr --output VGA-1 --mode "1280x1024_75.00" --scale 1.125 --panning 1440x1152
+
+# reset panning
+#xrandr --output VGA-1 --mode "1280x1024_75.00" --scale 1 --panning 1280x1024
+
+#-------------------------------------------------------
+
 #touch $HOME/.xprofile
 #chmod +x $HOME/.xprofile
 
