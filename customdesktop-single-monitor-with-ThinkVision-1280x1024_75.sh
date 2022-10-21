@@ -57,3 +57,7 @@ xrandr --output VGA-1 --mode "1280x1024_75.00"
 #
 # use arandr
 
+
+#-------------------------------------------------------
+
+#xdpyinfo | grep -B 2 resolution
