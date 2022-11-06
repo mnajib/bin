@@ -2,8 +2,8 @@
 
 #
 # Usage:
-#   init-second-monitor-ThinkVisionForKeira.sh dual
-#   init-second-monitor-ThinkVisionForKeira.sh single
+#   init-second-monitor1280x1024-forKeira.sh dual
+#   init-second-monitor1280x1024-forKeira.sh single
 #
 
 export DISPLAY=:0
