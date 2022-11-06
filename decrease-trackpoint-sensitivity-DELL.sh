@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# vim: tabstop=4 shiftwidth=4 expandtab nowrap number
 
 d=`xinput list | grep "ALPS DualPoint Stick" | awk '{for(i=1;i<=NF;i++){ tmp=match($i, /id=[0-9]/); if(tmp){print $i} } }' | awk --field-separator== '{ print $2 }'`
 #14
