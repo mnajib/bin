@@ -20,20 +20,13 @@ Xephyr -br -ac -noreset -screen 1366x740 :1 &  # sakinah
 
 #cd ~/.wine/drive_c/users/nurnasuha/AppData/StardewValley
 #cat ~/.wine/drive_c/MyPrograms/Stardew.Valley.v1.5.4/config/startup_preferences > startup_preferences
-<<<<<<< HEAD
 cat ~/.wine/drive_c/MyPrograms/Stardew.Valley.v1.5.4/config/startup_preferences > ~/.wine/drive_c/users/${USER}/AppData/Roaming/StardewValley/startup_preferences
-=======
-cat ~/.wine/drive_c/MyPrograms/Stardew.Valley.v1.5.4/config/startup_preferences > ~/.wine/drive_c/users/nurnasuha/AppData/Roaming/StardewValley/startup_preferences
->>>>>>> b3899a7 (StarDewValley start script)
 
 # Start the game
 cd ~/.wine/drive_c/MyPrograms/Stardew.Valley.v1.5.4/Stardew\ Valley/
 #DISPLAY=:1 wine ./Stardew\ Valley.exe
 #DISPLAY=:1 wine ${PATH5}/Stardew\ Valley.exe
 #cd ${PATH5}
-<<<<<<< HEAD
-DISPLAY=:1 
+#DISPLAY=:1 
 #wine Stardew\ Valley.exe
-=======
 DISPLAY=:1 wine ./Stardew\ Valley.exe
->>>>>>> b3899a7 (StarDewValley start script)
