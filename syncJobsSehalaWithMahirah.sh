@@ -26,6 +26,12 @@ function doSync {
 	rsync -h --progress --stats -r -tgo -p -l -D --update --protect-args -e "ssh -p 22" $srcDir $desDir
 }
 
+function doSyncWithDelete { # XXX: with delete extraneous files from destination directories {
+	local srcDir=$1
+	local desDir=$2
+	rsync -h --progress --stats -r -tgo -p -l -D --update --delete --protect-args -e "ssh -p 22" $srcDir $desDir
+}
+
 # XXX: Not in use
 #function syncToMahirah {
 #    doSync $1 $2
@@ -39,7 +45,8 @@ function doSync {
 case $1 in
     --toMahirah)
 	#syncToMahirah $DIR1 $DIR2
-	doSync $DIR1 $DIR2
+	#doSync $DIR1 $DIR2
+	doSyncWithDelete $DIR1 $DIR2
         ;;
     --fromMahirah)
         #syncFromMahirah $DIR1 $DIR2
