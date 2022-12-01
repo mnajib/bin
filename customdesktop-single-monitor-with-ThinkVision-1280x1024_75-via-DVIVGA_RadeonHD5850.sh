@@ -1,3 +1,4 @@
+
 #!/usr/bin/env bash
 
 #xrandr -q
@@ -29,7 +30,9 @@ xrandr -q
 #xrandr --addmode VGA-1 "1280x1024_75.00"
 xrandr --addmode DVI-0 "1280x1024_75.00"
 #xrandr --output VGA-1 --mode "1280x1024_75.00"
-xrandr --output DVI-0 --mode "1280x1024_75.00"
+#xrandr --output DVI-0 --mode "1280x1024_75.00"
+xrandr --output DisplayPort-0 --off --output HDMI-0 --off --output DVI-0 --primary --mode 1280x1024_75.00 --pos 0x0 --rotate normal
+
 
 #-------------------------------------------------------
 
