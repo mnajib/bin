@@ -16,7 +16,9 @@ function printUsage {
     echo ""
     echo "Usage:"
     echo "    syncJobsSehalaWithMahirah,sh --toMahirah"
+    echo "    syncJobsSehalaWithMahirah,sh --toMahirahWithDelDes"
     echo "    syncJobsSehalaWithMahirah,sh --fromMahirah"
+    echo "    syncJobsSehalaWithMahirah,sh --fromMahirahWithDelDes"
     echo ""
 }
 
@@ -43,7 +45,7 @@ function doSyncWithDelete { # XXX: with delete extraneous files from destination
 #}
 
 case $1 in
-    --toMahirah)
+    --toMahirah|--toMahirahWithDelDes)
 	#syncToMahirah $DIR1 $DIR2
 	#doSync $DIR1 $DIR2
 	doSyncWithDelete $DIR1 $DIR2
@@ -52,6 +54,9 @@ case $1 in
         #syncFromMahirah $DIR1 $DIR2
         doSync $DIR2 $DIR1
         ;;
+    --fromMahirahWithDelDes)
+	doSyncWithDelete $DIR2 $DIR1
+	;;
     *)
         printUsage
         ;;
