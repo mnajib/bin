@@ -2,7 +2,7 @@
 
 # tput_colors - Demonstrate color combinations.
 
-for fg_color in 0 8 1 9 2 10 3 11; do
+for fg_color in 0 8 1 9 2 10 3 11 4 12 5 13 6 14 7 15; do
   set_foreground=$(tput setaf $fg_color)
   for bg_color in {0..7}; do
     set_background=$(tput setab $bg_color)
@@ -12,7 +12,7 @@ for fg_color in 0 8 1 9 2 10 3 11; do
   echo $(tput sgr0)
 done
 
-for fg_color in 4 12 5 13 6 14 7 15; do
+for fg_color in 0 8 1 9 2 10 3 11 4 12 5 13 6 14 7 15; do
   set_foreground=$(tput setaf $fg_color)
   for bg_color in {8..15}; do
     set_background=$(tput setab $bg_color)
