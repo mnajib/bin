@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# Najib Ibrahim <mnajib@gmail.com>
+
+printTall () {
+  echo ""
+}
+
+printWide () {
+  local FGNAMES=(' black ' '  red  ' ' green ' ' yellow' '  blue ' 'magenta' '  cyan ' ' white ' ' black ' '  red  ' ' green ' ' yellow' '  blue ' 'magenta' '  cyan ' ' white ')
+  local XCOLORS=('color0 ' 'color1 ' 'color2 ' 'color3 ' 'color4 ' 'color5 ' 'color6 ' 'color7 ' 'color8 ' 'color9 ' 'color10' 'color11' 'color12' 'color13' 'color14' 'color15')
+
+  tput sgr0
+  #echo -en "         "
+  echo -en "      FG:"
+  echo -en " "
+  for h in 0 8 1 9 2 10 3 11 4 12 5 13 6 14 7 15; do
+      printf ' %7s ' ${XCOLORS[$h]}
+  done
+  echo $(tput sgr0)
+
+  echo -en "   BG:   "
+  echo -en "┌"
+  for j in {0..143}; do
+    echo -en "─"
+  done
+  echo "┐"
+
+  for bg_color in 0 8 1 9 2 10 3 11 4 12 5 13 6 14 7 15; do
+    set_background=$(tput setab $bg_color)
+    printf ' %7s ' ${XCOLORS[$bg_color]}
+    echo -en "│"
+
+    for fg_color in 0 8 1 9 2 10 3 11 4 12 5 13 6 14 7 15; do
+      set_foreground=$(tput setaf $fg_color)
+      echo -n $set_background$set_foreground # set color
+      printf ' %7s ' ${FGNAMES[$fg_color]} # print text
+    done
+
+    tput sgr0
+    echo -en "│"
+    printf ' %s' ${FGNAMES[$bg_color]}
+    echo $(tput sgr0)
+  done
+
+  echo -en "         "
+  echo -en "└"
+  for j in {0..143}; do
+    echo -en "─"
+  done
+  echo "┘"
+}
+
+printWide
