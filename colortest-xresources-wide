@@ -207,6 +207,40 @@ printTestColorWide () {
 }
 
 #------------------------------------------------------------------------------
+getSystemColor () {
+  #xrdb -query -all | grep '\*color.*\:.*#' | sed 's/^\*color//' | sed 's/**://'
+
+  #local colors = ()
+  #while read -a line; do
+  #  colors += ()
+  #done < <(xrdb -query -all | grep '\*color.*\:.*#' | sed 's/^\*color//' | sed 's/**://')
+
+
+  readarray -t colors < <(xrdb -query -all | grep '\*color.*\:.*#' | sed 's/^\*color//' | sed 's/**://' | sort -n) 
+
+  #printf '%s\n' "${colors[@]}"
+  #for each in "${colors[@]}"
+  #do
+  #  echo "$each"
+  #done
+
+  for (( i=0; i < ${#colors[@]}; i++ )); do
+    #echo "${colors[$i]}"
+    #systemColors[$i]=(echo "${colors[$i]}" | awk '{print $2}')
+    systemColors[$i]="${colors[$i]}"
+  done
+
+  echo ""
+  echo "        SysColr TstColr"
+  echo "------- ------- -------"
+  for (( i=0; i < ${#systemColors[@]}; i++ )); do
+    echo "color${systemColors[$i]} ${colorCodes[$i]}"
+  done
+
+}
+#getSystemColor
+
+#------------------------------------------------------------------------------
 printCurrentColorWide () {
   echo "Print Current System Color"
   echo ""
@@ -219,6 +253,8 @@ printCurrentColorWide () {
 
   local FGNAMES=(' black ' '  red  ' ' green ' ' yellow' '  blue ' 'magenta' '  cyan ' ' white ' ' black ' '  red  ' ' green ' ' yellow' '  blue ' 'magenta' '  cyan ' ' white ')
   local XCOLORS=('color0 ' 'color1 ' 'color2 ' 'color3 ' 'color4 ' 'color5 ' 'color6 ' 'color7 ' 'color8 ' 'color9 ' 'color10' 'color11' 'color12' 'color13' 'color14' 'color15')
+
+  declare -a systemColors
 
   tput sgr0
   #echo -en "         "
@@ -236,22 +272,42 @@ printCurrentColorWide () {
   done
   echo "┐"
 
+  #----------------------------------------------------------------------------
+  readarray -t colors < <(xrdb -query -all | grep '\*color.*\:.*#' | sed 's/^\*color//' | sed 's/**://' | sort -n) 
+  for (( i=0; i < ${#colors[@]}; i++ )); do
+    #echo "${colors[$i]}"
+    systemColors[$i]=$( echo "${colors[$i]}" | awk '{print $2}' )
+    #systemColors[$i]="${colors[$i]}"
+  done
+  #for (( i=0; i < ${#systemColors[@]}; i++ )); do
+  #  echo "color${systemColors[$i]} ${colorCodes[$i]}"
+  #done
+  #----------------------------------------------------------------------------
+
   for bg_color in 0 8 1 9 2 10 3 11 4 12 5 13 6 14 7 15; do
     set_background=$(tput setab $bg_color)
     printf ' %7s ' ${XCOLORS[$bg_color]}
     echo -en "│"
 
+    bgc=$(fromhex ${colorCodes[$bg_color]})
+
     for fg_color in 0 8 1 9 2 10 3 11 4 12 5 13 6 14 7 15; do
       set_foreground=$(tput setaf $fg_color)
       echo -n $set_background$set_foreground # set color
-      printf ' %7s ' ${FGNAMES[$fg_color]} # print text
       #printf ' %7s ' ${FGNAMES[$fg_color]} # print text
+      # XXX: -----------------------------------------------------
+      fgc=$(fromhex ${systemColors[$fg_color]})
+      t="$bgc,$fgc"
+      #printf '\e[38;5;%d;48;5;%dm %7s \e[0m' $fgc $bgc "$t"
+      printf ' %7s ' "$t" # print text
+      #-----------------------------------------------------------
     done
 
     tput sgr0
     echo -en "│"
     #printf ' %s' ${FGNAMES[$bg_color]}
-    printf ' %s' ${colorNames[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
+    printf ' %7s' ${colorNames[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
+    printf ' %6s ' ${systemColors[$bg_color]}
     echo $(tput sgr0)
   done
 
@@ -274,9 +330,9 @@ printCurrentColorWide () {
 }
 
 #printf '\e[38;5;%d;48;5;%dm %7s \e[0m' 40 228 "Percubaan 1 2 3"
-#printTestColorTall
-#printCurrentColorTall
+
+#getSystemColor
+#echo ""
+
 printTestColorWide
 printCurrentColorWide
-#color2 191 196 "Selamat Pagi Malaysia!"; echo ""
-xrdb -query -all | grep '\*color.*\:.*#' | sed 's/^\*color//' | sed 's/**://'
