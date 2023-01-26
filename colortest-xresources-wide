@@ -4,12 +4,12 @@
 colorNames[0]="DBlack "
 colorCodes[0]="000000"
 colorNames[8]="LBlack "
-colorCodes[8]="575757"
+colorCodes[8]="4c4c4c"
 
 colorNames[1]="DRed   "
-colorCodes[1]="d0323a"
+colorCodes[1]="cc0000"
 colorNames[9]="LRed   "
-colorCodes[9]="db6167"
+colorCodes[9]="ff4c4c"
 
 colorNames[2]="DGreen "
 colorCodes[2]="009200"
@@ -17,12 +17,12 @@ colorNames[10]="LGreen "
 colorCodes[10]="00d700"
 
 colorNames[3]="DYellow"
-colorCodes[3]="cdcd55"
+colorCodes[3]="b8b84c"
 colorNames[11]="LYellow"
 colorCodes[11]="ffff87"
 
 colorNames[4]="DBlue  "
-colorCodes[4]="3673b5"
+colorCodes[4]="2278e6"
 colorNames[12]="LBlue  "
 colorCodes[12]="67a2ee"
 
@@ -32,7 +32,7 @@ colorNames[13]="LMgenta"
 colorCodes[13]="c64ed7"
 
 colorNames[6]="DCyan  "
-colorCodes[6]="02caca"
+colorCodes[6]="01b5b5"
 colorNames[14]="LCyan  "
 colorCodes[14]="45fdfd"
 
@@ -245,6 +245,7 @@ printCurrentColorWide () {
       set_foreground=$(tput setaf $fg_color)
       echo -n $set_background$set_foreground # set color
       printf ' %7s ' ${FGNAMES[$fg_color]} # print text
+      #printf ' %7s ' ${FGNAMES[$fg_color]} # print text
     done
 
     tput sgr0
@@ -278,4 +279,4 @@ printCurrentColorWide () {
 printTestColorWide
 printCurrentColorWide
 #color2 191 196 "Selamat Pagi Malaysia!"; echo ""
-
+xrdb -query -all | grep '\*color.*\:.*#' | sed 's/^\*color//' | sed 's/**://'
