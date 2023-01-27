@@ -1,0 +1,495 @@
+#!/usr/bin/env bash
+# colortest-xresources
+# Najib Ibrahim <mnajib@gmail.com>
+#
+# Requirement:
+#   xrdb
+#   grep
+#   sed
+#   awk
+#   sort
+
+colorNames[0]="DBlack "
+colorCodes[0]="000000"
+colorNames[8]="LBlack "
+colorCodes[8]="4c4c4c"
+
+colorNames[1]="DRed   "
+colorCodes[1]="cc0000"
+colorNames[9]="LRed   "
+colorCodes[9]="ff4c4c"
+
+colorNames[2]="DGreen "
+colorCodes[2]="009200"
+colorNames[10]="LGreen "
+colorCodes[10]="00d700"
+
+colorNames[3]="DYellow"
+colorCodes[3]="b8b84c"
+colorNames[11]="LYellow"
+colorCodes[11]="ffff87"
+
+colorNames[4]="DBlue  "
+colorCodes[4]="2278e6"
+colorNames[12]="LBlue  "
+colorCodes[12]="67a2ee"
+
+colorNames[5]="DMgenta"
+colorCodes[5]="8c00a0"
+colorNames[13]="LMgenta"
+colorCodes[13]="c64ed7"
+
+colorNames[6]="DCyan  "
+colorCodes[6]="01b5b5"
+colorNames[14]="LCyan  "
+colorCodes[14]="45fdfd"
+
+colorNames[7]="DWhite "
+colorCodes[7]="b9b9b9"
+colorNames[15]="LWhite "
+colorCodes[15]="ffffff"
+
+#------------------------------------------------------------------------------
+color(){
+    for c; do
+        printf '\e[48;5;%dm%03d' $c $c
+    done
+    printf '\e[0m \n'
+}
+#IFS=$' \t\n'
+#color {0..15}
+#for ((i=0;i<6;i++)); do
+#    color $(seq $((i*36+16)) $((i*36+51)))
+#done
+#color {232..255}
+
+#------------------------------------------------------------------------------
+# Usage example:
+#   color2 128 72 "Selamat Pagi Malaysia!"
+color2 () {
+  #bg256=160 # red
+  #fg256=31  # blue
+  local bgc=$1
+  local fgc=$2
+  local s="$3"
+
+  # Example:
+  #   tput setaf 38; tput setaf 38 | cat -v
+  #   tput setaf 38; tput setaf 38 | echo 38
+  #   tput setab 160; tput setaf 38; tput setaf 38 | cat -v; tput sgr0
+  #
+  #printf '\e[48;5;%dm%03d' $c $c
+  #tput setaf $fg256; tput setaf $fg256 | cat -v
+
+  #printf '\e[38;5;%d;48;5;%dm%s' $fgc $bgc "$s"
+  #printf '\e[0m \n' # Reset
+  #printf '\e[38;5;%d;48;5;%dm%s\e[0m\n' $fgc $bgc "$s"
+  printf '\e[38;5;%d;48;5;%dm%s\e[0m' $fgc $bgc "$s"
+}
+
+#------------------------------------------------------------------------------
+printColor3 () {
+  local bgc=$1
+  local fgc=$2
+  local s="$3"
+
+  #printf '\e[38;5;%d;48;5;%dm%s' $fgc $bgc "$s"
+  #printf '\e[0m \n' # Reset
+  #printf '\e[38;5;%d;48;5;%dm%s\e[0m\n' $fgc $bgc "$s"
+  #printf '\e[38;5;%d;48;5;%dm%s\e[0m' $fgc $bgc "$s"
+  printf '\e[38;5;%d;48;5;%dm%3s%3s\e[0m' $fgc $bgc "$bgc" "$fgc"
+  #printf ' %3s,%3s ' $bgc $fgc                               # print text (black, black, red, red, green, green, ...) in the box
+}
+
+#------------------------------------------------------------------------------
+# Example usage:
+#   fromhex 00fc7b
+#   fromhex #00fc7b
+fromhex(){
+    hex=${1#"#"}
+    r=$(printf '0x%0.2s' "$hex")
+    g=$(printf '0x%0.2s' ${hex#??})
+    b=$(printf '0x%0.2s' ${hex#????})
+    #printf '%03d' "$(( (r<75?0:(r-35)/40)*6*6 +
+    printf '%d' "$(( (r<75?0:(r-35)/40)*6*6 +
+                       (g<75?0:(g-35)/40)*6   +
+                       (b<75?0:(b-35)/40)     + 16 ))"
+}
+#echo $(fromhex d0323a)
+
+#------------------------------------------------------------------------------
+# Example usage:
+#   tohex 125
+#   tohex 6
+#   tohex 235
+tohex(){
+    dec=$(($1%256))   ### input must be a number in range 0-255.
+    if [ "$dec" -lt "16" ]; then
+        bas=$(( dec%16 ))
+        mul=128
+        [ "$bas" -eq "7" ] && mul=192
+        [ "$bas" -eq "8" ] && bas=7
+        [ "$bas" -gt "8" ] && mul=255
+        a="$((  (bas&1)    *mul ))"
+        b="$(( ((bas&2)>>1)*mul ))" 
+        c="$(( ((bas&4)>>2)*mul ))"
+        printf 'dec= %3s basic= #%02x%02x%02x\n' "$dec" "$a" "$b" "$c"
+    elif [ "$dec" -gt 15 ] && [ "$dec" -lt 232 ]; then
+        b=$(( (dec-16)%6  )); b=$(( b==0?0: b*40 + 55 ))
+        g=$(( (dec-16)/6%6)); g=$(( g==0?0: g*40 + 55 ))
+        r=$(( (dec-16)/36 )); r=$(( r==0?0: r*40 + 55 ))
+        printf 'dec= %3s color= #%02x%02x%02x\n' "$dec" "$r" "$g" "$b"
+    else
+        gray=$(( (dec-232)*10+8 ))
+        printf 'dec= %3s  gray= #%02x%02x%02x\n' "$dec" "$gray" "$gray" "$gray"
+    fi
+}
+#for i in $(seq 0 255); do
+#    tohex ${i}
+#done
+
+#------------------------------------------------------------------------------
+printCurrentColorTall () {
+  echo "Print Current Color"
+}
+
+#------------------------------------------------------------------------------
+printTestColorWide () {
+  echo "Print Test Color"
+  echo ""
+
+  #local FGNAMES=(' black ' '  red  ' ' green ' ' yellow' '  blue ' 'magenta' '  cyan ' ' white ' ' black ' '  red  ' ' green ' ' yellow' '  blue ' 'magenta' '  cyan ' ' white ')
+  local XCOLORS=('color0 ' 'color1 ' 'color2 ' 'color3 ' 'color4 ' 'color5 ' 'color6 ' 'color7 ' 'color8 ' 'color9 ' 'color10' 'color11' 'color12' 'color13' 'color14' 'color15')
+
+  tput sgr0
+  #echo -en "         "
+  echo -en "      FG:"
+  echo -en " "
+  for h in 0 8 1 9 2 10 3 11 4 12 5 13 6 14 7 15; do
+      printf ' %7s ' ${XCOLORS[$h]}
+  done
+  echo $(tput sgr0)                                 # reset background and foreground color
+
+  echo -en "   BG:   "
+  echo -en "┌"
+  for j in {0..143}; do
+    echo -en "─"
+  done
+  echo "┐"
+
+  for bg_color in 0 8 1 9 2 10 3 11 4 12 5 13 6 14 7 15; do
+
+    printf ' %7s ' ${XCOLORS[$bg_color]}            # print text (color0, color8, color1, ...) outside-left of the box
+    echo -en "│"
+
+    bgc=$(fromhex ${colorCodes[$bg_color]})
+
+    for fg_color in 0 8 1 9 2 10 3 11 4 12 5 13 6 14 7 15; do
+      fgc=$(fromhex ${colorCodes[$fg_color]})
+      t="$bgc,$fgc"
+      printf '\e[38;5;%d;48;5;%dm %7s \e[0m' $fgc $bgc "$t"
+    done
+
+    tput sgr0                                       # reset background and foreground color
+    echo -en "│"
+    printf ' %7s' ${colorNames[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
+    printf ' #%6s' ${colorCodes[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
+    echo $(tput sgr0)
+  done
+
+  echo -en "         "
+  echo -en "└"
+  for j in {0..143}; do
+    echo -en "─"
+  done
+  echo "┘"
+
+  tput sgr0
+  echo -en "         "
+  echo -en " "
+  for h in 0 8 1 9 2 10 3 11 4 12 5 13 6 14 7 15; do
+      printf ' %7s ' ${colorNames[$h]}
+  done
+  echo $(tput sgr0)                                 # reset background and foreground color
+  echo ""
+}
+
+#------------------------------------------------------------------------------
+getSystemColor () {
+  #xrdb -query -all | grep '\*color.*\:.*#' | sed 's/^\*color//' | sed 's/**://'
+
+  #local colors = ()
+  #while read -a line; do
+  #  colors += ()
+  #done < <(xrdb -query -all | grep '\*color.*\:.*#' | sed 's/^\*color//' | sed 's/**://')
+
+
+  readarray -t colors < <(xrdb -query -all | grep '\*color.*\:.*#' | sed 's/^\*color//' | sed 's/**://' | sed 's/#//' | sort -n) 
+
+  #printf '%s\n' "${colors[@]}"
+  #for each in "${colors[@]}"
+  #do
+  #  echo "$each"
+  #done
+
+  for (( i=0; i < ${#colors[@]}; i++ )); do
+    #echo "${colors[$i]}"
+    #systemColors[$i]=(echo "${colors[$i]}" | awk '{print $2}')
+    systemColors[$i]="${colors[$i]}"
+  done
+
+  echo ""
+  echo "        SysColr TstColr"
+  echo "------- ------- -------"
+  for (( i=0; i < ${#systemColors[@]}; i++ )); do
+    echo "color${systemColors[$i]} ${colorCodes[$i]}"
+  done
+
+}
+#getSystemColor
+
+#------------------------------------------------------------------------------
+printCurrentColorWide () {
+  echo "Print Current System Color"
+  echo ""
+
+  #
+  # To see the currently loaded resorces:
+  #    xrdb -query -all
+  #    xrdb -query -all | grep '\*color.*\:.*#' | sed 's/^\*color//' | sed 's/**://'
+  #
+
+  local FGNAMES=(' black ' '  red  ' ' green ' ' yellow' '  blue ' 'magenta' '  cyan ' ' white ' ' black ' '  red  ' ' green ' ' yellow' '  blue ' 'magenta' '  cyan ' ' white ')
+  local XCOLORS=('color0 ' 'color1 ' 'color2 ' 'color3 ' 'color4 ' 'color5 ' 'color6 ' 'color7 ' 'color8 ' 'color9 ' 'color10' 'color11' 'color12' 'color13' 'color14' 'color15')
+
+  declare -a systemColors
+
+  tput sgr0
+  #echo -en "         "
+  echo -en "      FG:"
+  echo -en " "
+  for h in 0 8 1 9 2 10 3 11 4 12 5 13 6 14 7 15; do
+      printf ' %7s ' ${XCOLORS[$h]}
+  done
+  echo $(tput sgr0)
+
+  echo -en "   BG:   "
+  echo -en "┌"
+  for j in {0..143}; do
+    echo -en "─"
+  done
+  echo "┐"
+
+  #----------------------------------------------------------------------------
+  readarray -t colors < <(xrdb -query -all | grep '\*color.*\:.*#' | sed 's/^\*color//' | sed 's/**://' | sed 's/#//' | sort -n) 
+  for (( i=0; i < ${#colors[@]}; i++ )); do
+    #echo "${colors[$i]}"
+    systemColors[$i]=$( echo "${colors[$i]}" | awk '{print $2}' )
+    #systemColors[$i]="${colors[$i]}"
+  done
+  #for (( i=0; i < ${#systemColors[@]}; i++ )); do
+  #  echo "color${systemColors[$i]} ${colorCodes[$i]}"
+  #done
+  #----------------------------------------------------------------------------
+
+  for bg_color in 0 8 1 9 2 10 3 11 4 12 5 13 6 14 7 15; do
+    set_background=$(tput setab $bg_color)
+    printf ' %7s ' ${XCOLORS[$bg_color]}
+    echo -en "│"
+
+    bgc=$(fromhex ${colorCodes[$bg_color]})
+
+    for fg_color in 0 8 1 9 2 10 3 11 4 12 5 13 6 14 7 15; do
+      set_foreground=$(tput setaf $fg_color)
+      echo -n $set_background$set_foreground # set color
+      #printf ' %7s ' ${FGNAMES[$fg_color]} # print text
+      # XXX: -----------------------------------------------------
+      fgc=$(fromhex ${systemColors[$fg_color]})
+      t="$bgc,$fgc"
+      #printf '\e[38;5;%d;48;5;%dm %7s \e[0m' $fgc $bgc "$t"
+      printf ' %7s ' "$t" # print text
+      #-----------------------------------------------------------
+    done
+
+    tput sgr0
+    echo -en "│"
+    #printf ' %s' ${FGNAMES[$bg_color]}
+    printf ' %7s' ${colorNames[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
+    printf ' #%6s ' ${systemColors[$bg_color]}
+    echo $(tput sgr0)
+  done
+
+  echo -en "         "
+  echo -en "└"
+  for j in {0..143}; do
+    echo -en "─"
+  done
+  echo "┘"
+
+  tput sgr0
+  echo -en "         "
+  echo -en " "
+  for h in 0 8 1 9 2 10 3 11 4 12 5 13 6 14 7 15; do
+      #printf ' %7s ' ${FGNAMES[$h]}
+      printf ' %7s ' ${colorNames[$h]}
+  done
+  echo $(tput sgr0)                                 # reset background and foreground color
+  echo ""
+}
+
+printTestcolorVsSystemColor () {
+  #echo "Test Color vs System Color"
+
+  #local FGNAMES=(' black ' '  red  ' ' green ' ' yellow' '  blue ' 'magenta' '  cyan ' ' white ' ' black ' '  red  ' ' green ' ' yellow' '  blue ' 'magenta' '  cyan ' ' white ')
+  local XCOLORS=('color0 ' 'color1 ' 'color2 ' 'color3 ' 'color4 ' 'color5 ' 'color6 ' 'color7 ' 'color8 ' 'color9 ' 'color10' 'color11' 'color12' 'color13' 'color14' 'color15')
+
+  tput sgr0
+  #echo -en "      FG:"
+  #echo -en " "
+  #for h in 0 8 1 9 2 10 3 11 4 12 5 13 6 14 7 15; do
+  #    printf ' %7s ' ${XCOLORS[$h]}
+  #done
+  #echo $(tput sgr0)                                 # reset background and foreground color
+  echo ""
+  echo "                          Test Color                   System Color"
+
+  #echo -en "   BG:   "
+  echo -en "         "
+  echo -en "         ┌"
+  for j in {0..27}; do
+    echo -en "─"
+  done
+  echo -en "┐"
+  echo -en " ┌"
+  for j in {0..27}; do
+    echo -en "─"
+  done
+  echo "┐"
+
+  for bg_color in 0 8 1 9 2 10 3 11 4 12 5 13 6 14 7 15; do
+
+    printf ' %7s ' ${XCOLORS[$bg_color]}            # print text (color0, color8, color1, ...) outside-left of the box
+    printf ' %7s' ${colorNames[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
+    echo -en " │ "
+
+    bgc=$(fromhex ${colorCodes[$bg_color]})
+
+    #--------------------------------------------------------------------------
+    for fg_color in 0 15; do
+      fgc=$(fromhex ${colorCodes[$fg_color]})
+      t="$bgc,$fgc"
+      printf '\e[38;5;%d;48;5;%dm %7s \e[0m' $fgc $bgc "$t"
+    done
+    tput sgr0                                       # reset background and foreground color
+    printf ' #%6s' ${colorCodes[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
+    echo -en " │ "
+
+    #--------------------------------------------------------------------------
+    echo -en "│ "
+
+    readarray -t colors < <(xrdb -query -all | grep '\*color.*\:.*#' | sed 's/^\*color//' | sed 's/**://' | sed 's/#//' | sort -n) 
+    for (( i=0; i < ${#colors[@]}; i++ )); do
+      systemColors[$i]=$( echo "${colors[$i]}" | awk '{print $2}' )
+    done
+
+    set_background=$(tput setab $bg_color)
+    bgc=$(fromhex ${colorCodes[$bg_color]})
+    for fg_color in 0 15; do
+      set_foreground=$(tput setaf $fg_color)
+      echo -n $set_background$set_foreground # set color
+      fgc=$(fromhex ${systemColors[$fg_color]})
+      t="$bgc,$fgc"
+      printf ' %7s ' "$t" # print text
+    done
+    tput sgr0
+    printf ' #%6s ' ${systemColors[$bg_color]}
+    #--------------------------------------------------------------------------
+
+    echo -en "│"
+    echo $(tput sgr0)
+  done
+
+  echo -en "         "
+  echo -en "         └"
+  for j in {0..27}; do
+    echo -en "─"
+  done
+  echo -en "┘"
+  echo -en " └"
+  for j in {0..27}; do
+    echo -en "─"
+  done
+  echo "┘"
+
+  #tput sgr0
+  #echo -en "         "
+  #echo -en " "
+  #for h in 0 8 1 9 2 10 3 11 4 12 5 13 6 14 7 15; do
+  #    printf ' %7s ' ${colorNames[$h]}
+  #done
+  echo $(tput sgr0)                                 # reset background and foreground color
+  #echo ""
+}
+
+#------------------------------------------------------------------------------
+printUsage () {
+  echo "Usage:"
+  echo "  colortest-xresources [option]"
+  echo ""
+  echo "Option:"
+  echo "  --help            Print this help"
+  echo "  --testcolor       Print full test colors"
+  echo "  --systemcolor     Print full current system/xresources colors"
+  echo "  --default         Print full test colors and syntem colors"
+  echo "  --diff            Print differences between the test colors and system colors"
+  echo "                    Same as --testcolor"
+  echo "  --fulldiff        Print full differences between the test colors and system colors"
+  echo ""
+}
+
+#------------------------------------------------------------------------------
+main () {
+  case $1 in
+    wide|--wide)
+      printTestColorWide
+      printCurrentColorWide
+      ;;
+    tall|--tall)
+      #printTestColorTall
+      printTestColorWide
+      printCurrentColorWide
+      ;;
+    testcolor|--testcolor)
+      printTestColorWide
+      ;;
+    systemcolor|--systemcolor)
+      printCurrentColorWide
+      ;;
+    fulldiff|--fulldiff|dif2|--diff2)
+      printTestColorWide
+      printCurrentColorWide
+      ;;
+    default|--default)
+      printTestColorWide
+      ;;
+    diff|--diff)
+      printTestcolorVsSystemColor
+      ;;
+    help|--help)
+      printUsage
+      ;;
+    *)
+      #printTestColorWide
+      #printCurrentColorWide
+      printUsage
+      ;;
+    esac
+}
+
+main $1
+
+#printf '\e[38;5;%d;48;5;%dm %7s \e[0m' 40 228 "Percubaan 1 2 3"
+
+#getSystemColor
+#echo ""
+
