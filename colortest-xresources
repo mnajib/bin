@@ -297,16 +297,17 @@ printCurrentColorWide () {
     printf ' %7s ' ${XCOLORS[$bg_color]}
     echo -en "│"
 
-    bgc=$(fromhex ${colorCodes[$bg_color]})
+    #bgc=$(fromhex ${colorCodes[$bg_color]})
 
     for fg_color in 0 8 1 9 2 10 3 11 4 12 5 13 6 14 7 15; do
       set_foreground=$(tput setaf $fg_color)
       echo -n $set_background$set_foreground # set color
       #printf ' %7s ' ${FGNAMES[$fg_color]} # print text
       # XXX: -----------------------------------------------------
-      fgc=$(fromhex ${systemColors[$fg_color]})
-      t="$bgc,$fgc"
-      #printf '\e[38;5;%d;48;5;%dm %7s \e[0m' $fgc $bgc "$t"
+      #fgc=$(fromhex ${systemColors[$fg_color]})
+      #t="$bgc,$fgc"
+      t="XXX,XXX"
+      ##printf '\e[38;5;%d;48;5;%dm %7s \e[0m' $fgc $bgc "$t"
       printf ' %7s ' "$t" # print text
       #-----------------------------------------------------------
     done
@@ -315,7 +316,8 @@ printCurrentColorWide () {
     echo -en "│"
     #printf ' %s' ${FGNAMES[$bg_color]}
     printf ' %7s' ${colorNames[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
-    printf ' #%6s ' ${systemColors[$bg_color]}
+    #printf ' #%6s ' ${systemColors[$bg_color]}
+    printf ' #%6s ' "XXXXXX"
     echo $(tput sgr0)
   done
 
@@ -330,11 +332,71 @@ printCurrentColorWide () {
   echo -en "         "
   echo -en " "
   for h in 0 8 1 9 2 10 3 11 4 12 5 13 6 14 7 15; do
-      #printf ' %7s ' ${FGNAMES[$h]}
-      printf ' %7s ' ${colorNames[$h]}
+    #printf ' %7s ' ${FGNAMES[$h]}
+    printf ' %7s ' ${colorNames[$h]}
   done
   echo $(tput sgr0)                                 # reset background and foreground color
   echo ""
+}
+
+getSystemColorEscape () {
+  #echo "Get System Color Escape Code"
+
+  #local FGNAMES=('DBlack ' ' DRed  ' 'DGreen ' 'DYellow' ' DBlue ' 'DMgenta' ' DCyan ' 'DWhite ' 'LBlack ' ' LRed  ' 'LGreen ' 'LYellow' ' LBlue ' 'LMgenta' ' LCyan ' 'LWhite ')
+  local XCOLORS=('color0 ' 'color1 ' 'color2 ' 'color3 ' 'color4 ' 'color5 ' 'color6 ' 'color7 ' 'color8 ' 'color9 ' 'color10' 'color11' 'color12' 'color13' 'color14' 'color15')
+
+  #tput sgr0
+  #echo $(tput sgr0)                                 # reset background and foreground color
+  #echo -en "   BG:   "
+  #tput setaf 170; echo "bismillah"
+  #tput setaf 170 | xxd
+
+  declare -A systemColorsEscape
+  for color in 0 8 1 9 2 10 3 11 4 12 5 13 6 14 7 15; do
+    systemColorEscape[$color]=$(tput setab $color)
+  done
+
+  echo $systemColorsEscape
+}
+
+# Usage:
+#   printTextWithColor <bg_color> <fg_color> <text_string>
+# Example usage:
+#   printTextWithColor 021 118 "semua ini adalah cobaan"
+printTextWithColor () {
+  bgColor256=$1
+  fgColor256=$2
+  text="$3"
+  bgDefault256=0
+  fgDefault256=255
+  resetColorEscape="\e[38;5;${fgDefault256};48;5;${bgDefault256}m"
+  printf "\e[38;5;${fgColor256};48;5;${bgColor256}m${text}${resetColorEscape}"
+  printf "${resetColorEscape}"
+}
+
+runTest () {
+  #printf '\e[38;5;%d;48;5;%dm %7s \e[0m' 40 228 "Percubaan 1 2 3"
+
+  #getSystemColor
+  #echo ""
+
+  #tput setf 2 | xxd
+  #tput setaf 2 | xxd
+
+  printf "permulaan\n"
+  printTextWithColor 21 118 "mari kita cuba\n"
+  printTextWithColor 013 021 "populasi katak terbang di belakang kedai pak abu\n"
+  printTextWithColor 014 020 "kedai pak ali"
+  echo ""
+  echo "masih belum berapa faham"
+  printf "nampak bagus\n"
+  printTextWithColor 021 013 "--> macam mana dengan yang ini <--\n"
+  printf "nampak elok\n"
+  echo -en "masih belum berapa faham\n"
+  printf "mengelirukan\n"
+  echo "ok ke tak ok ni?"
+  #printf "\n"
+  #echo ""
 }
 
 #------------------------------------------------------------------------------
@@ -403,12 +465,12 @@ printTestcolorVsSystemColor () {
     else
       for (( i=0; i < ${#colors[@]}; i++ )); do
         systemColors[$i]=$( echo "${colors[$i]}" | awk '{print $2}' )
-	#if [[ -z $systemColors[$i] || $systemColors[$i] = "" || $systemColors[$i] -eq 0 ]] # If empty
-	#then
-	#  systemColors[$i] = "??????"
-	#else
-	#  echo $systemColors[$i]
-	#fi
+        #if [[ -z $systemColors[$i] || $systemColors[$i] = "" || $systemColors[$i] -eq 0 ]] # If empty
+        #then
+        #  systemColors[$i] = "??????"
+        #else
+        #  echo $systemColors[$i]
+        #fi
       done
     fi
 
@@ -429,7 +491,7 @@ printTestcolorVsSystemColor () {
       then
          fgc=$(fromhex ${systemColors[$fg_color]})
       else
-	 fgc="XXX"
+      fgc="XXX"
       fi
       #t="$bgc,$fgc"
       t="XXX,XXX"
@@ -514,6 +576,9 @@ main () {
     help|--help)
       printUsage
       ;;
+    test|--test)
+      runTest
+      ;;
     *)
       #printTestColorWide
       #printCurrentColorWide
@@ -524,10 +589,3 @@ main () {
 
 main $1
 
-#printf '\e[38;5;%d;48;5;%dm %7s \e[0m' 40 228 "Percubaan 1 2 3"
-
-#getSystemColor
-#echo ""
-
-#tput setf 2 | xxd
-#tput setaf 2 | xxd
