@@ -439,7 +439,7 @@ printTestcolorVsSystemColor () {
     tput sgr0
     #printf ' #%6s ' ${systemColors[$bg_color]}
     #printf '  %6s ' " "
-    printf '  %6s ' "XXXXXX"
+    printf ' #%6s ' "XXXXXX"
     #--------------------------------------------------------------------------
 
     echo -en "│"
