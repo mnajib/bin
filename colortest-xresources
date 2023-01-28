@@ -431,13 +431,15 @@ printTestcolorVsSystemColor () {
       else
 	 fgc="XXX"
       fi
-      t="$bgc,$fgc"
-      #printf ' %7s ' "$t" # print text
-      printf ' %7s ' " " # print text
+      #t="$bgc,$fgc"
+      t="XXX,XXX"
+      printf ' %7s ' "$t" # print text
+      #printf ' %7s ' " " # print text
     done
     tput sgr0
     #printf ' #%6s ' ${systemColors[$bg_color]}
-    printf '  %6s ' " "
+    #printf '  %6s ' " "
+    printf '  %6s ' "XXXXXX"
     #--------------------------------------------------------------------------
 
     echo -en "│"
