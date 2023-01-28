@@ -529,3 +529,5 @@ main $1
 #getSystemColor
 #echo ""
 
+#tput setf 2 | xxd
+#tput setaf 2 | xxd
