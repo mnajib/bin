@@ -337,11 +337,13 @@ printCurrentColorWide () {
   echo ""
 }
 
+#------------------------------------------------------------------------------
 printTestcolorVsSystemColor () {
   #echo "Test Color vs System Color"
 
   #local FGNAMES=(' black ' '  red  ' ' green ' ' yellow' '  blue ' 'magenta' '  cyan ' ' white ' ' black ' '  red  ' ' green ' ' yellow' '  blue ' 'magenta' '  cyan ' ' white ')
   local XCOLORS=('color0 ' 'color1 ' 'color2 ' 'color3 ' 'color4 ' 'color5 ' 'color6 ' 'color7 ' 'color8 ' 'color9 ' 'color10' 'color11' 'color12' 'color13' 'color14' 'color15')
+
 
   tput sgr0
   #echo -en "      FG:"
@@ -356,6 +358,7 @@ printTestcolorVsSystemColor () {
   #echo -en "   BG:   "
   echo -en "         "
   echo -en "         ┌"
+  local j=0
   for j in {0..27}; do
     echo -en "─"
   done
@@ -366,6 +369,7 @@ printTestcolorVsSystemColor () {
   done
   echo "┐"
 
+  local bg_color=0
   for bg_color in 0 8 1 9 2 10 3 11 4 12 5 13 6 14 7 15; do
 
     printf ' %7s ' ${XCOLORS[$bg_color]}            # print text (color0, color8, color1, ...) outside-left of the box
@@ -387,17 +391,46 @@ printTestcolorVsSystemColor () {
     #--------------------------------------------------------------------------
     echo -en "│ "
 
+    declare -a colors
+    declare -a systemColors
     readarray -t colors < <(xrdb -query -all | grep '\*color.*\:.*#' | sed 's/^\*color//' | sed 's/**://' | sed 's/#//' | sort -n) 
-    for (( i=0; i < ${#colors[@]}; i++ )); do
-      systemColors[$i]=$( echo "${colors[$i]}" | awk '{print $2}' )
-    done
+    if [ "${#colors[@]}" = 0 ]
+    then
+      #echo -en " empty array "
+      for k in {0..15}; do
+	systemColors[$k]="XXXXXX"
+      done
+    else
+      for (( i=0; i < ${#colors[@]}; i++ )); do
+        systemColors[$i]=$( echo "${colors[$i]}" | awk '{print $2}' )
+	#if [[ -z $systemColors[$i] || $systemColors[$i] = "" || $systemColors[$i] -eq 0 ]] # If empty
+	#then
+	#  systemColors[$i] = "??????"
+	#else
+	#  echo $systemColors[$i]
+	#fi
+      done
+    fi
 
+    tput sgr0
     set_background=$(tput setab $bg_color)
-    bgc=$(fromhex ${colorCodes[$bg_color]})
+    #bgc=$(fromhex ${colorCodes[$bg_color]})
+    if [[ ${systemColors[$bg_color]} != "XXXXXX" ]]
+    then
+      bgc=$(fromhex ${systemColors[$bg_color]})
+    else
+      bgc="XXX"
+    fi
+
     for fg_color in 0 15; do
       set_foreground=$(tput setaf $fg_color)
       echo -n $set_background$set_foreground # set color
-      fgc=$(fromhex ${systemColors[$fg_color]})
+      if [[ ${systemColors[$fg_color]} != "XXXXXX" ]]
+      then
+         fgc=$(fromhex ${systemColors[$fg_color]})
+      else
+	 fgc="XXX"
+      fi
       t="$bgc,$fgc"
       printf ' %7s ' "$t" # print text
     done
@@ -440,9 +473,8 @@ printUsage () {
   echo "  --help            Print this help"
   echo "  --testcolor       Print full test colors"
   echo "  --systemcolor     Print full current system/xresources colors"
-  echo "  --default         Print full test colors and syntem colors"
+  echo "  --default         Same as --diff"
   echo "  --diff            Print differences between the test colors and system colors"
-  echo "                    Same as --testcolor"
   echo "  --fulldiff        Print full differences between the test colors and system colors"
   echo ""
 }
@@ -470,7 +502,7 @@ main () {
       printCurrentColorWide
       ;;
     default|--default)
-      printTestColorWide
+      printTestcolorVsSystemColor
       ;;
     diff|--diff)
       printTestcolorVsSystemColor
