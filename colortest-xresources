@@ -587,5 +587,16 @@ main () {
     esac
 }
 
-main $1
+if [ $# -eq 0 ]
+then
+  #echo "No arguments supplied"
+  main --diff
+elif [ -z "$1" ]
+then
+  #echo "No argument supplied"
+  main --diff
+else
+  main $1
+fi
+#main $1
 
