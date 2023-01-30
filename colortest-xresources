@@ -436,16 +436,17 @@ printTestcolorVsSystemColor () {
 
     printf ' %7s ' ${XCOLORS[$bg_color]}            # print text (color0, color8, color1, ...) outside-left of the box
     printf ' %7s' ${colorNames[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
+
+    #--------------------------------------------------------------------------
     echo -en " │ "
 
     bgc=$(fromhex ${colorCodes[$bg_color]})
-
-    #--------------------------------------------------------------------------
     for fg_color in 0 15; do
       fgc=$(fromhex ${colorCodes[$fg_color]})
       t="$bgc,$fgc"
       printf '\e[38;5;%d;48;5;%dm %7s \e[0m' $fgc $bgc "$t"
     done
+
     tput sgr0                                       # reset background and foreground color
     printf ' #%6s' ${colorCodes[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
     echo -en " │ "
@@ -453,58 +454,20 @@ printTestcolorVsSystemColor () {
     #--------------------------------------------------------------------------
     echo -en "│ "
 
-    declare -a colors
-    declare -a systemColors
-    readarray -t colors < <(xrdb -query -all | grep '\*color.*\:.*#' | sed 's/^\*color//' | sed 's/**://' | sed 's/#//' | sort -n) 
-    if [ "${#colors[@]}" = 0 ]
-    then
-      #echo -en " empty array "
-      for k in {0..15}; do
-        systemColors[$k]="XXXXXX"
-      done
-    else
-      for (( i=0; i < ${#colors[@]}; i++ )); do
-        systemColors[$i]=$( echo "${colors[$i]}" | awk '{print $2}' )
-        #if [[ -z $systemColors[$i] || $systemColors[$i] = "" || $systemColors[$i] -eq 0 ]] # If empty
-        #then
-        #  systemColors[$i] = "??????"
-        #else
-        #  echo $systemColors[$i]
-        #fi
-      done
-    fi
-
     tput sgr0
     set_background=$(tput setab $bg_color)
-    #bgc=$(fromhex ${colorCodes[$bg_color]})
-    if [[ ${systemColors[$bg_color]} != "XXXXXX" ]]
-    then
-      bgc=$(fromhex ${systemColors[$bg_color]})
-    else
-      bgc="XXX"
-    fi
-
     for fg_color in 0 15; do
       set_foreground=$(tput setaf $fg_color)
       echo -n $set_background$set_foreground # set color
-      if [[ ${systemColors[$fg_color]} != "XXXXXX" ]]
-      then
-         fgc=$(fromhex ${systemColors[$fg_color]})
-      else
-      fgc="XXX"
-      fi
-      #t="$bgc,$fgc"
       t="XXX,XXX"
       printf ' %7s ' "$t" # print text
-      #printf ' %7s ' " " # print text
     done
     tput sgr0
-    #printf ' #%6s ' ${systemColors[$bg_color]}
-    #printf '  %6s ' " "
     printf ' #%6s ' "XXXXXX"
-    #--------------------------------------------------------------------------
 
     echo -en "│"
+    #--------------------------------------------------------------------------
+
     echo $(tput sgr0)
   done
 
@@ -520,14 +483,7 @@ printTestcolorVsSystemColor () {
   done
   echo "┘"
 
-  #tput sgr0
-  #echo -en "         "
-  #echo -en " "
-  #for h in 0 8 1 9 2 10 3 11 4 12 5 13 6 14 7 15; do
-  #    printf ' %7s ' ${colorNames[$h]}
-  #done
   echo $(tput sgr0)                                 # reset background and foreground color
-  #echo ""
 }
 
 #------------------------------------------------------------------------------
@@ -598,5 +554,4 @@ then
 else
   main $1
 fi
-#main $1
 
