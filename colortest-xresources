@@ -12,7 +12,8 @@
 colorNames[0]="DBlack "
 colorCodes[0]="000000"
 colorNames[8]="LBlack "
-colorCodes[8]="4c4c4c"
+#colorCodes[8]="4c4c4c"
+colorCodes[8]="4b4b4b"
 
 colorNames[1]="DRed   "
 colorCodes[1]="cc0000"
@@ -49,7 +50,9 @@ colorNames[14]="LCyan  "
 colorCodes[14]="45fdfd"
 
 colorNames[7]="DWhite "
-colorCodes[7]="b9b9b9"
+#colorCodes[7]="b9b9b9"
+#colorCodes[7]="aeaeae"
+colorCodes[7]="8b8b8b"
 colorNames[15]="LWhite "
 colorCodes[15]="ffffff"
 
