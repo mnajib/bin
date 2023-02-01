@@ -240,7 +240,8 @@ printTestColorWideWithFile () {
   local colors=( )
   local systemColors=( )
 
-  readarray -t colors < <( grep '\*\.color.*\:.*#' $f | sed 's/^\*\.color//' | sed 's/**://' | sort -n ) 
+  #readarray -t colors < <( grep '\*\.color.*\:.*#' $f | sed 's/^\*\.color//' | sed 's/**://' | sort -n )
+  readarray -t colors < <( grep '\*.*color.*\:.*#' $f | sed 's/^.*color//' | sed 's/**://' | sort -n )
   for (( i=0; i < ${#colors[@]}; i++ )); do
     systemColors[$i]="$( echo "${colors[$i]}" | awk '{print $2}' )"
     #echo "${systemColors[$i]}"
@@ -320,7 +321,8 @@ getSystemColor () {
   #done < <(xrdb -query -all | grep '\*color.*\:.*#' | sed 's/^\*color//' | sed 's/**://')
 
 
-  readarray -t colors < <(xrdb -query -all | grep '\*color.*\:.*#' | sed 's/^\*color//' | sed 's/**://' | sed 's/#//' | sort -n) 
+  #readarray -t colors < <(xrdb -query -all | grep '\*color.*\:.*#' | sed 's/^\*color//' | sed 's/**://' | sed 's/#//' | sort -n) 
+  readarray -t colors < <( xrdb -query -all | grep '\*.*color.*\:.*#' | sed 's/^.*color//' | sed 's/**://' | sort -n )
 
   #printf '%s\n' "${colors[@]}"
   #for each in "${colors[@]}"
@@ -377,7 +379,8 @@ printCurrentColorWide () {
   echo "┐"
 
   #----------------------------------------------------------------------------
-  readarray -t colors < <(xrdb -query -all | grep '\*color.*\:.*#' | sed 's/^\*color//' | sed 's/**://' | sed 's/#//' | sort -n) 
+  #readarray -t colors < <(xrdb -query -all | grep '\*color.*\:.*#' | sed 's/^\*color//' | sed 's/**://' | sed 's/#//' | sort -n) 
+  readarray -t colors < <( xrdb -query -all | grep '\*.*color.*\:.*#' | sed 's/^.*color//' | sed 's/**://' | sort -n )
   for (( i=0; i < ${#colors[@]}; i++ )); do
     #echo "${colors[$i]}"
     systemColors[$i]=$( echo "${colors[$i]}" | awk '{print $2}' )
@@ -507,7 +510,8 @@ function printTestcolorfileVsSystemColor {
   local colors=( )
   local fileColors=( )
 
-  readarray -t colors < <( grep '\*\.color.*\:.*#' $f | sed 's/^\*\.color//' | sed 's/**://' | sort -n ) 
+  #readarray -t colors < <( grep '\*\.color.*\:.*#' $f | sed 's/^\*\.color//' | sed 's/**://' | sort -n )
+  readarray -t colors < <( grep '\*.*color.*\:.*#' $f | sed 's/^.*color//' | sed 's/**://' | sort -n )
   for (( i=0; i < ${#colors[@]}; i++ )); do
     fileColors[$i]="$( echo "${colors[$i]}" | awk '{print $2}' )"
     #echo "${fileColors[$i]}"
