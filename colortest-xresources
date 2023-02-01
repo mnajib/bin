@@ -512,29 +512,42 @@ function printTestcolorfileVsSystemColor {
     echo -en " │ "
 
     bgc=$(fromhex ${systemColors[$bg_color]})
+    fg2c=$(fromhex ${systemColors[$bg_color]})
     for fg_color in 0 15; do
       fgc=$(fromhex ${systemColors[$fg_color]})
+      bg2c=$(fromhex ${systemColors[$fg_color]})
       t="$bgc,$fgc"
+      #t2="$bg2c,$fg2c"
       printf '\e[38;5;%d;48;5;%dm %7s \e[0m' $fgc $bgc "$t"
     done
 
     tput sgr0                                       # reset background and foreground color
-    printf ' #%6s' ${colorCodes[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
-    echo -en " │ "
+    #printf ' #%6s' ${colorCodes[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
+    #printf '\e[38;5;%d;48;5;%dm #%6s \e[0m' $fg2c $bg2c ${colorCodes[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
+    #printf '\e[38;5;%d;48;5;%dm #%6s \e[0m' $fg2c 16 ${colorCodes[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
+    printf '\e[38;5;%dm #%6s \e[0m' $fg2c ${colorCodes[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
+    echo -en "│ "
 
     #--------------------------------------------------------------------------
     echo -en "│ "
 
     tput sgr0
     set_background=$(tput setab $bg_color)
+    set_foreground2=$(tput setaf $bg_color)
     for fg_color in 0 15; do
       set_foreground=$(tput setaf $fg_color)
+      set_background2=$(tput setab 0)
       echo -n $set_background$set_foreground # set color
       t="XXX,XXX"
       printf ' %7s ' "$t" # print text
     done
-    tput sgr0
+    #tput sgr0
+    #printf ' #%6s ' "XXXXXX"
+    #printf '\e[38;5;%dm #%6s \e[0m' $fg2c ${colorCodes[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
+    #printf '\e[38;5;%dm #%6s \e[0m' $fg2c "XXXXXX"              # print text (black, black, red, red, ...) outside-right of the box
+    echo -n ${set_background2}${set_foreground2} # set color
     printf ' #%6s ' "XXXXXX"
+    printf '\e[0m'              # print text (black, black, red, red, ...) outside-right of the box
 
     echo -en "│"
     #--------------------------------------------------------------------------
@@ -601,14 +614,17 @@ printTestcolorVsSystemColor () {
     echo -en " │ "
 
     bgc=$(fromhex ${colorCodes[$bg_color]})
+    fg2c=$(fromhex ${colorCodes[$bg_color]})
     for fg_color in 0 15; do
       fgc=$(fromhex ${colorCodes[$fg_color]})
+      bg2c=$(fromhex ${colorCodes[$fg_color]})
       t="$bgc,$fgc"
       printf '\e[38;5;%d;48;5;%dm %7s \e[0m' $fgc $bgc "$t"
     done
 
     tput sgr0                                       # reset background and foreground color
-    printf ' #%6s' ${colorCodes[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
+    #printf ' #%6s' ${colorCodes[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
+    printf '\e[38;5;%dm #%6s \e[0m' $fg2c ${colorCodes[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
     echo -en " │ "
 
     #--------------------------------------------------------------------------
@@ -616,14 +632,19 @@ printTestcolorVsSystemColor () {
 
     tput sgr0
     set_background=$(tput setab $bg_color)
+    set_foreground2=$(tput setaf $bg_color)
     for fg_color in 0 15; do
       set_foreground=$(tput setaf $fg_color)
+      set_background2=$(tput setab 0)
       echo -n $set_background$set_foreground # set color
       t="XXX,XXX"
       printf ' %7s ' "$t" # print text
     done
     tput sgr0
+    #printf ' #%6s ' "XXXXXX"
+    echo -n ${set_background2}${set_foreground2} # set color
     printf ' #%6s ' "XXXXXX"
+    printf '\e[0m'              # print text (black, black, red, red, ...) outside-right of the box
 
     echo -en "│"
     #--------------------------------------------------------------------------
