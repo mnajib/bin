@@ -616,7 +616,7 @@ function printTestcolorfileVsSystemColor {
     #printf '\e[38;5;%d;48;5;%dm #%6s \e[0m' $fg2c $bg2c ${colorCodes[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
     #printf '\e[38;5;%d;48;5;%dm #%6s \e[0m' $fg2c 16 ${colorCodes[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
     tt=${fileColors[$bg_color]}
-    printf '\e[38;5;%dm %6s \e[0m' $fg2c ${tt}
+    printf '\e[38;5;%dm %7s \e[0m' $fg2c ${tt}
     echo -en "│ "
 
     #--------------------------------------------------------------------------
