@@ -50,9 +50,10 @@ colorNames[14]="LCyan  "
 colorCodes[14]="45fdfd"
 
 colorNames[7]="DWhite "
-#colorCodes[7]="b9b9b9"
+#colorCodes[7]="8b8b8b"
 #colorCodes[7]="aeaeae"
-colorCodes[7]="8b8b8b"
+colorCodes[7]="afafaf"
+#colorCodes[7]="b9b9b9"
 colorNames[15]="LWhite "
 colorCodes[15]="ffffff"
 
@@ -502,60 +503,70 @@ function printTestcolorfileVsSystemColor {
 
   local f="$1"
   local colors=( )
-  local systemColors=( )
+  local fileColors=( )
 
   readarray -t colors < <( grep '\*\.color.*\:.*#' $f | sed 's/^\*\.color//' | sed 's/**://' | sort -n ) 
   for (( i=0; i < ${#colors[@]}; i++ )); do
-    systemColors[$i]="$( echo "${colors[$i]}" | awk '{print $2}' )"
-    #echo "${systemColors[$i]}"
+    fileColors[$i]="$( echo "${colors[$i]}" | awk '{print $2}' )"
+    #echo "${fileColors[$i]}"
   done
 
   local XCOLORS=('color0 ' 'color1 ' 'color2 ' 'color3 ' 'color4 ' 'color5 ' 'color6 ' 'color7 ' 'color8 ' 'color9 ' 'color10' 'color11' 'color12' 'color13' 'color14' 'color15')
 
   tput sgr0
   echo ""
-  echo "                          Test Color                   System Color"
+  echo "                          Hardcoded Test Colors                  Current System Colors                        File Colors"
 
   echo -en "         "
+  #----------
   echo -en "         ┌"
   local j=0
   for j in {0..36}; do
     echo -en "─"
   done
   echo -en "┐"
+  #----------
+  echo -en " ┌"
+  for j in {0..36}; do
+    echo -en "─"
+  done
+  echo -en "┐"
+  #----------
   echo -en " ┌"
   for j in {0..36}; do
     echo -en "─"
   done
   echo "┐"
+  #----------
 
   local bg_color=0
   for bg_color in 0 8 1 9 2 10 3 11 4 12 5 13 6 14 7 15; do
 
     printf ' %7s ' ${XCOLORS[$bg_color]}            # print text (color0, color8, color1, ...) outside-left of the box
-    printf ' %7s' ${colorNames[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
+    printf ' %7s ' ${colorNames[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
 
     #--------------------------------------------------------------------------
-    echo -en " │ "
+    # Print Hardcoded Test Colors
+    #--------------------------------------------------------------------------
+    echo -en "│ "
 
-    bgc=$(fromhex ${systemColors[$bg_color]})
-    fg2c=$(fromhex ${systemColors[$bg_color]})
+    bgc=$(fromhex ${colorCodes[$bg_color]})
+    fg2c=$(fromhex ${colorCodes[$bg_color]})
     for fg_color in 0 15; do
-      fgc=$(fromhex ${systemColors[$fg_color]})
-      bg2c=$(fromhex ${systemColors[$fg_color]})
+      fgc=$(fromhex ${colorCodes[$fg_color]})
+      bg2c=$(fromhex ${colorCodes[$fg_color]})
       t="$bgc,$fgc"
-      #t2="$bg2c,$fg2c"
       printf '\e[38;5;%d;48;5;%dm %7s \e[0m' $fgc $bgc "$t"
     done
 
     tput sgr0                                       # reset background and foreground color
     printf '\e[38;5;%d;48;5;%dm %7s \e[0m' $bgc 15 "$t"
     #printf ' #%6s' ${colorCodes[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
-    #printf '\e[38;5;%d;48;5;%dm #%6s \e[0m' $fg2c $bg2c ${colorCodes[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
-    #printf '\e[38;5;%d;48;5;%dm #%6s \e[0m' $fg2c 16 ${colorCodes[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
     printf '\e[38;5;%dm #%6s \e[0m' $fg2c ${colorCodes[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
     echo -en "│ "
 
+    #--------------------------------------------------------------------------
+    # Print Current System Colors
     #--------------------------------------------------------------------------
     echo -en "│ "
 
@@ -581,22 +592,56 @@ function printTestcolorfileVsSystemColor {
     printf '\e[0m'              # print text (black, black, red, red, ...) outside-right of the box
 
     echo -en "│"
+
+    #--------------------------------------------------------------------------
+    # Print Colors from (Xresources format) file
+    #--------------------------------------------------------------------------
+    echo -en " │ "
+
+    bgc=$(fromhex ${fileColors[$bg_color]})
+    fg2c=$(fromhex ${fileColors[$bg_color]})
+    for fg_color in 0 15; do
+      fgc=$(fromhex ${fileColors[$fg_color]})
+      bg2c=$(fromhex ${fileColors[$fg_color]})
+      t="$bgc,$fgc"
+      #t2="$bg2c,$fg2c"
+      printf '\e[38;5;%d;48;5;%dm %7s \e[0m' $fgc $bgc "$t"
+    done
+
+    tput sgr0                                       # reset background and foreground color
+    printf '\e[38;5;%d;48;5;%dm %7s \e[0m' $bgc 15 "$t"
+    #printf ' #%6s' ${colorCodes[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
+    #printf '\e[38;5;%d;48;5;%dm #%6s \e[0m' $fg2c $bg2c ${colorCodes[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
+    #printf '\e[38;5;%d;48;5;%dm #%6s \e[0m' $fg2c 16 ${colorCodes[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
+    tt=${fileColors[$bg_color]}
+    printf '\e[38;5;%dm %6s \e[0m' $fg2c ${tt}
+    echo -en "│ "
+
     #--------------------------------------------------------------------------
 
     echo $(tput sgr0)
   done
 
   echo -en "         "
+  #----------
   echo -en "         └"
   for j in {0..36}; do
     echo -en "─"
   done
   echo -en "┘"
+  #----------
+  echo -en " └"
+  for j in {0..36}; do
+    echo -en "─"
+  done
+  echo -en "┘"
+  #----------
   echo -en " └"
   for j in {0..36}; do
     echo -en "─"
   done
   echo "┘"
+  #----------
 
   echo $(tput sgr0)                                 # reset background and foreground color
 
@@ -619,8 +664,7 @@ printTestcolorVsSystemColor () {
   #done
   #echo $(tput sgr0)                                 # reset background and foreground color
   echo ""
-  #echo "                          Test Color                   System Color"
-  echo "                               Test Color                              System Color"
+  echo "                          Hardcoded Test Colors                  Current System Colors"
 
   #echo -en "   BG:   "
   echo -en "         "
@@ -645,7 +689,7 @@ printTestcolorVsSystemColor () {
     printf ' %7s ' ${colorNames[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
 
     #--------------------------------------------------------------------------
-    echo -en "│"
+    echo -en "│ "
 
     bgc=$(fromhex ${colorCodes[$bg_color]})
     fg2c=$(fromhex ${colorCodes[$bg_color]})
@@ -659,7 +703,7 @@ printTestcolorVsSystemColor () {
     tput sgr0                                       # reset background and foreground color
     printf '\e[38;5;%d;48;5;%dm %7s \e[0m' $bgc 15 "$t"
     #printf ' #%6s' ${colorCodes[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
-    printf '\e[38;5;%dm #%6s \e[0m' $fg2c ${colorCodes[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
+    printf '\e[38;5;%dm #%6s\e[0m' $fg2c ${colorCodes[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
     echo -en " │ "
 
     #--------------------------------------------------------------------------
