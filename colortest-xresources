@@ -25,9 +25,13 @@ colorNames[10]="LGreen "
 colorCodes[10]="00d700"
 
 colorNames[3]="DYellow"
-colorCodes[3]="b8b84c"
+#colorCodes[3]="b8b84c"
+#colorCodes[3]="aaaa44"
+colorCodes[3]="a3a341"
 colorNames[11]="LYellow"
-colorCodes[11]="ffff87"
+#colorCodes[11]="ffff87"
+#colorCodes[11]="ffff00"
+colorCodes[11]="fffc6f"
 
 colorNames[4]="DBlue  "
 colorCodes[4]="2278e6"
@@ -183,17 +187,24 @@ printTestColorWide () {
     echo -en "│"
 
     bgc=$(fromhex ${colorCodes[$bg_color]})
+    fg2c=$(fromhex ${colorCodes[$bg_color]})
 
     for fg_color in 0 8 1 9 2 10 3 11 4 12 5 13 6 14 7 15; do
       fgc=$(fromhex ${colorCodes[$fg_color]})
+      bg2c=$(fromhex ${colorCodes[$fg_color]})
       t="$bgc,$fgc"
       printf '\e[38;5;%d;48;5;%dm %7s \e[0m' $fgc $bgc "$t"
     done
 
     tput sgr0                                       # reset background and foreground color
     echo -en "│"
-    printf ' %7s' ${colorNames[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
-    printf ' #%6s' ${colorCodes[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
+    #printf ' %7s' ${colorNames[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
+    #printf ' #%6s' ${colorCodes[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
+    t1=${colorNames[$bg_color]}
+    t2=${colorCodes[$bg_color]}
+    #printf '\e[38;5;%dm %7s\e[0m' $fg2c ${colorNames[$bg_color]}
+    #printf '\e[38;5;%dm #%6s\e[0m' $fg2c ${colorCodes[$bg_color]}
+    printf '\e[38;5;%dm %7s #%6s\e[0m' $fg2c "$t1" "$t2"
     echo $(tput sgr0)
   done
 
@@ -254,16 +265,25 @@ printTestColorWideWithFile () {
     echo -en "│"
 
     bgc=$(fromhex ${systemColors[$bg_color]})
+    #fg2c=$(fromhex ${systemColors[$bg_color]})
+    fg2c=$bgc
     for fg_color in 0 8 1 9 2 10 3 11 4 12 5 13 6 14 7 15; do
       fgc=$(fromhex ${systemColors[$fg_color]})
+      #bg2c=$(fromhex ${systemColors[$fg_color]})
+      bg2c=$fgc
       t="$bgc,$fgc"
       printf '\e[38;5;%d;48;5;%dm %7s \e[0m' $fgc $bgc "$t"
     done
 
     tput sgr0                                       # reset background and foreground color
     echo -en "│"
-    printf ' %7s' ${colorNames[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
-    printf ' #%6s' ${colorCodes[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
+    #printf ' %7s' ${colorNames[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
+    #printf ' #%6s' ${colorCodes[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
+    t1=${colorNames[$bg_color]}
+    t2=${colorCodes[$bg_color]}
+    #printf '\e[38;5;%d;48;5;%dm %7s\e[0m' $fg2c 0 "$t1"
+    #printf '\e[38;5;%d;48;5;%dm #%6s\e[0m' $fg2c 0 "$t2"
+    printf '\e[38;5;%d;48;5;%dm %7s #%6s\e[0m' $fg2c 0 "$t1" "$t2"
     echo $(tput sgr0)
   done
 
@@ -364,6 +384,7 @@ printCurrentColorWide () {
 
   for bg_color in 0 8 1 9 2 10 3 11 4 12 5 13 6 14 7 15; do
     set_background=$(tput setab $bg_color)
+    set_foreground2=$(tput setaf $bg_color)
     printf ' %7s ' ${XCOLORS[$bg_color]}
     echo -en "│"
 
@@ -371,6 +392,8 @@ printCurrentColorWide () {
 
     for fg_color in 0 8 1 9 2 10 3 11 4 12 5 13 6 14 7 15; do
       set_foreground=$(tput setaf $fg_color)
+      #set_background2=$(tput setab $fg_color)
+      set_background2=$(tput setab 0)
       echo -n $set_background$set_foreground # set color
       #printf ' %7s ' ${FGNAMES[$fg_color]} # print text
       # XXX: -----------------------------------------------------
@@ -384,8 +407,9 @@ printCurrentColorWide () {
 
     tput sgr0
     echo -en "│"
+    echo -n ${set_background2}${set_foreground2} # set color
     #printf ' %s' ${FGNAMES[$bg_color]}
-    printf ' %7s' ${colorNames[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
+    printf ' %7s' "${colorNames[$bg_color]}"              # print text (black, black, red, red, ...) outside-right of the box
     #printf ' #%6s ' ${systemColors[$bg_color]}
     printf ' #%6s ' "XXXXXX"
     echo $(tput sgr0)
@@ -608,10 +632,10 @@ printTestcolorVsSystemColor () {
   for bg_color in 0 8 1 9 2 10 3 11 4 12 5 13 6 14 7 15; do
 
     printf ' %7s ' ${XCOLORS[$bg_color]}            # print text (color0, color8, color1, ...) outside-left of the box
-    printf ' %7s' ${colorNames[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
+    printf ' %7s ' ${colorNames[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
 
     #--------------------------------------------------------------------------
-    echo -en " │ "
+    echo -en "│"
 
     bgc=$(fromhex ${colorCodes[$bg_color]})
     fg2c=$(fromhex ${colorCodes[$bg_color]})
@@ -674,82 +698,71 @@ printUsage () {
   echo "  colortest-xresources [option]"
   echo ""
   echo "Option:"
-  echo "  --help            Print this help"
-  echo "  --testcolor       Print full test colors"
-  echo "  --systemcolor     Print full current system/xresources colors"
-  echo "  --default         Same as --diff"
-  echo "  --diff            Print differences between the test colors and system colors"
-  echo "  --fulldiff        Print full differences between the test colors and system colors"
+  echo "  -h,--help            Print this help"
+  echo "  -t,--test            Print full (hardcoded) test colors"
+  echo "  -t,--test <file>     Print full colors from (Xresources format) file"
+  echo "  -s,--system          Print full current system (Xresources) colors"
+  #echo "  -f,--file <file>     Print differences between the colors from (Xresources format) file and current system colors"
+  echo "  -d,--diff            Print differences between the (hardcoded) test colors and current system (Xresources) colors"
+  echo "  -d,--diff <file>     Print differences between the (hardcoded) test colors, current system (Xresources) colors, and colors from (Xresources format) file"
   echo ""
 }
 
 #------------------------------------------------------------------------------
-main () {
+#main () {
   #local p1=$1
   #local p2=$2
 
   case $1 in
-    wide|--wide)
-      printTestColorWide
-      printCurrentColorWide
-      ;;
-    tall|--tall)
-      #printTestColorTall
-      printTestColorWide
-      printCurrentColorWide
-      ;;
-    testcolor|--testcolor)
-      printTestColorWide
-      ;;
-    systemcolor|--systemcolor)
-      printCurrentColorWide
-      ;;
-    fulldiff|--fulldiff|dif2|--diff2)
+    --test|-t)
       if [ -z "$2" ]; then
         printTestColorWide
-        printCurrentColorWide
       else
         printTestColorWideWithFile "$2"
-        printCurrentColorWide
+      fi
+        ;;
+    --system|-s)
+      printCurrentColorWide
+      ;;
+    --file|-f)
+      if [ -z "$2" ]; then
+        printUsage
+      else
+        printTestColorWideWithFile "$2"
       fi
       ;;
-    default|--default)
-      printTestcolorVsSystemColor
-      ;;
-    diff|--diff)
+    --diff|-d)
       if [ -z "$2" ]; then
         printTestcolorVsSystemColor
       else
-        #echo "$2"
         printTestcolorfileVsSystemColor "$2"
       fi
       ;;
-    help|--help)
+    h|help|--help|-h)
       printUsage
       ;;
-    test|--test)
+    --xxx|-x)
       runTest
       ;;
     *)
-      #printTestColorWide
-      #printCurrentColorWide
       printUsage
       ;;
     esac
-}
+#}
 
-if [ $# -eq 0 ]; then
-  #echo "000"
-  #echo "No arguments supplied"
-  main --diff
-elif [ -z "$1" ]; then
-  #echo "No argument supplied"
-  main --diff
-elif [ $# -eq 2 ]; then
-  #echo "222"
-  main "$1" "$2"
-else
-  #echo "111"
-  main $1
-fi
+#if [ $# -eq 0 ]; then
+#  #echo "000"
+#  #echo "No arguments supplied"
+#  main --diff
+#elif [ -z "$1" ]; then
+#  #echo "No argument supplied"
+#  main --diff
+#elif [ $# -eq 2 ]; then
+#  #echo "222"
+#  main "$1" "$2"
+#else
+#  #echo "111"
+#  main $1
+#fi
+
 
