@@ -615,18 +615,21 @@ printTestcolorVsSystemColor () {
   #done
   #echo $(tput sgr0)                                 # reset background and foreground color
   echo ""
-  echo "                          Test Color                   System Color"
+  #echo "                          Test Color                   System Color"
+  echo "                               Test Color                              System Color"
 
   #echo -en "   BG:   "
   echo -en "         "
   echo -en "         ┌"
   local j=0
-  for j in {0..27}; do
+  #for j in {0..27}; do
+  for j in {0..36}; do
     echo -en "─"
   done
   echo -en "┐"
   echo -en " ┌"
-  for j in {0..27}; do
+  #for j in {0..27}; do
+  for j in {0..36}; do
     echo -en "─"
   done
   echo "┐"
@@ -650,6 +653,7 @@ printTestcolorVsSystemColor () {
     done
 
     tput sgr0                                       # reset background and foreground color
+    printf '\e[38;5;%d;48;5;%dm %7s \e[0m' $bgc 15 "$t"
     #printf ' #%6s' ${colorCodes[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
     printf '\e[38;5;%dm #%6s \e[0m' $fg2c ${colorCodes[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
     echo -en " │ "
@@ -659,6 +663,7 @@ printTestcolorVsSystemColor () {
 
     tput sgr0
     set_background=$(tput setab $bg_color)
+    set_background3=$(tput setab 15)
     set_foreground2=$(tput setaf $bg_color)
     for fg_color in 0 15; do
       set_foreground=$(tput setaf $fg_color)
@@ -668,6 +673,8 @@ printTestcolorVsSystemColor () {
       printf ' %7s ' "$t" # print text
     done
     tput sgr0
+    echo -n ${set_background3}${set_foreground2} # set color
+    printf ' #%6s ' "XXXXXX"
     #printf ' #%6s ' "XXXXXX"
     echo -n ${set_background2}${set_foreground2} # set color
     printf ' #%6s ' "XXXXXX"
@@ -681,12 +688,14 @@ printTestcolorVsSystemColor () {
 
   echo -en "         "
   echo -en "         └"
-  for j in {0..27}; do
+  #for j in {0..27}; do
+  for j in {0..36}; do
     echo -en "─"
   done
   echo -en "┘"
   echo -en " └"
-  for j in {0..27}; do
+  #for j in {0..27}; do
+  for j in {0..36}; do
     echo -en "─"
   done
   echo "┘"
