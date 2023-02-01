@@ -655,6 +655,61 @@ function printTestcolorfileVsSystemColor {
 }
 
 #------------------------------------------------------------------------------
+function printNajibColors {
+  local XCOLORS=('color0 ' 'color1 ' 'color2 ' 'color3 ' 'color4 ' 'color5 ' 'color6 ' 'color7 ' 'color8 ' 'color9 ' 'color10' 'color11' 'color12' 'color13' 'color14' 'color15')
+
+  tput sgr0
+  echo ""
+  echo "                           Najib's Color Scheme"
+
+  echo -en "         "
+  echo -en "         ┌"
+  local j=0
+  for j in {0..36}; do
+    echo -en "─"
+  done
+  echo "┐"
+
+  local bg_color=0
+  for bg_color in 0 8 1 9 2 10 3 11 4 12 5 13 6 14 7 15; do
+
+    printf ' %7s ' ${XCOLORS[$bg_color]}            # print text (color0, color8, color1, ...) outside-left of the box
+    printf ' %7s ' ${colorNames[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
+
+    #--------------------------------------------------------------------------
+    echo -en "│ "
+
+    bgc=$(fromhex ${colorCodes[$bg_color]})
+    fg2c=$(fromhex ${colorCodes[$bg_color]})
+    for fg_color in 0 15; do
+      fgc=$(fromhex ${colorCodes[$fg_color]})
+      bg2c=$(fromhex ${colorCodes[$fg_color]})
+      t="$bgc,$fgc"
+      printf '\e[38;5;%d;48;5;%dm %7s \e[0m' $fgc $bgc "$t"
+    done
+
+    tput sgr0                                       # reset background and foreground color
+    printf '\e[38;5;%d;48;5;%dm %7s \e[0m' $bgc 15 "$t"
+    printf '\e[38;5;%dm #%6s\e[0m' $fg2c ${colorCodes[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
+    echo -en " │ "
+
+    #--------------------------------------------------------------------------
+
+    echo $(tput sgr0)
+  done
+
+  echo -en "         "
+  echo -en "         └"
+  for j in {0..36}; do
+    echo -en "─"
+  done
+  echo "┘"
+
+  echo $(tput sgr0)                                 # reset background and foreground color
+  echo ""
+}
+
+#------------------------------------------------------------------------------
 printTestcolorVsSystemColor () {
   #echo "--> Begin Test Color vs System Color"
 
@@ -771,6 +826,7 @@ printUsage () {
   #echo "  -f,--file <file>     Print differences between the colors from (Xresources format) file and current system colors"
   echo "  -d,--diff            Print differences between the (hardcoded) test colors and current system (Xresources) colors"
   echo "  -d,--diff <file>     Print differences between the (hardcoded) test colors, current system (Xresources) colors, and colors from (Xresources format) file"
+  echo "  -n,--najib           Print Najib's color scheme"
   echo ""
 }
 
@@ -803,6 +859,13 @@ printUsage () {
       else
         printTestcolorfileVsSystemColor "$2"
         #printTestcolorVsSystemColor "$2"
+      fi
+      ;;
+    -n|--najib)
+      if [ -z "$2" ]; then
+        printNajibColors
+      else
+        printUsage
       fi
       ;;
     h|help|--help|-h)
