@@ -15,20 +15,31 @@ colorNames[8]="LBlack "
 colorCodes[8]="4b4b4b"
 
 colorNames[1]="DRed   "
-colorCodes[1]="cc0000"
+#colorCodes[1]="cc0000"
+#colorCodes[1]="b82214"
+#colorCodes[1]="cc1100"
+colorCodes[1]="c7002e"
 colorNames[9]="LRed   "
-colorCodes[9]="ff4c4c"
+#colorCodes[9]="ff4c4c"
+#colorCodes[9]="ff4d4d"
+#colorCodes[9]="fe4534"
+colorCodes[9]="fe5748"
 
 colorNames[2]="DGreen "
 colorCodes[2]="009200"
+#colorCodes[2]="66b032"
 colorNames[10]="LGreen "
 colorCodes[10]="00d700"
+##colorCodes[10]="8bcb0b"
+#colorCodes[10]="9bd770"
 
 colorNames[3]="DYellow"
 colorCodes[3]="aa8800"
+#colorCodes[3]="b8b814"
+#colorCodes[3]="c3b72c"
 colorNames[11]="LYellow"
-#colorCodes[11]="ffe680"
-colorCodes[11]="ffee00"
+#colorCodes[11]="ffee00"
+colorCodes[11]="fff261"
 
 colorNames[4]="DBlue  "
 colorCodes[4]="2278e6"
@@ -434,6 +445,74 @@ function runTest {
 }
 
 #------------------------------------------------------------------------------
+function printCompactColorFromFile {
+  local f="$1"
+  local colors=( )
+  local fileColors=( )
+
+  readarray -t colors < <( xrdb -n $f | grep '\*.*color.*\:.*#' | grep -v '^!' | sed 's/^.*color//' | sed 's/**://' | sort -n )
+  for (( i=0; i < ${#colors[@]}; i++ )); do
+    fileColors[$i]="$( echo "${colors[$i]}" | awk '{print $2}' )"
+  done
+
+  local XCOLORS=('color0 ' 'color1 ' 'color2 ' 'color3 ' 'color4 ' 'color5 ' 'color6 ' 'color7 ' 'color8 ' 'color9 ' 'color10' 'color11' 'color12' 'color13' 'color14' 'color15')
+
+  tput sgr0
+  echo ""
+  #echo "Color Scheme from file ${f}"
+  #echo ""
+
+  echo -en "         "
+  echo -en "         ┌"
+  local j=0
+  for j in {0..36}; do
+    echo -en "─"
+  done
+  echo "┐"
+
+  local bg_color=0
+  for bg_color in 0 8 1 9 2 10 3 11 4 12 5 13 6 14 7 15; do
+
+    printf ' %7s ' ${XCOLORS[$bg_color]}            # print text (color0, color8, color1, ...) outside-left of the box
+    printf ' %7s ' ${colorNames[$bg_color]}              # print text (black, black, red, red, ...) outside-right of the box
+
+    #--------------------------------------------------------------------------
+    # Print Colors from (Xresources format) file
+    #--------------------------------------------------------------------------
+    echo -en "│ "
+
+    bgc=$(fromhex ${fileColors[$bg_color]})
+    fg2c=$(fromhex ${fileColors[$bg_color]})
+    for fg_color in 0 15; do
+      fgc=$(fromhex ${fileColors[$fg_color]})
+      bg2c=$(fromhex ${fileColors[$fg_color]})
+      t="$bgc,$fgc"
+      printf '\e[38;5;%d;48;5;%dm %7s \e[0m' $fgc $bgc "$t"
+    done
+
+    tput sgr0
+    printf '\e[38;5;%d;48;5;%dm %7s \e[0m' $bgc 15 "$t"
+    tt=${fileColors[$bg_color]}
+    printf '\e[38;5;%dm %7s \e[0m' $fg2c ${tt}
+    echo -en "│ "
+
+    #--------------------------------------------------------------------------
+
+    echo $(tput sgr0)
+  done
+
+  echo -en "         "
+  echo -en "         └"
+  for j in {0..36}; do
+    echo -en "─"
+  done
+  echo "┘"
+
+  echo $(tput sgr0)                                 # reset background and foreground color
+  echo ""
+}
+
+#------------------------------------------------------------------------------
 function printTestcolorfileVsSystemColor {
   local f="$1"
   local colors=( )
@@ -721,9 +800,9 @@ function printUsage {
   echo "  -t,--test            Print full (hardcoded) test colors"
   echo "  -t,--test <file>     Print full colors from (Xresources format) file"
   echo "  -s,--system          Print full current system (Xresources) colors"
-  #echo "  -f,--file <file>     Print differences between the colors from (Xresources format) file and current system colors"
-  echo "  -d,--diff            Print differences between the (hardcoded) test colors and current system (Xresources) colors"
-  echo "  -d,--diff <file>     Print differences between the (hardcoded) test colors, current system (Xresources) colors, and colors from (Xresources format) file"
+  echo "  -f,--file <file>     Print compact colors from (Xresources format) file"
+  echo "  -d,--diff            Print compact differences between the (hardcoded) test colors and current system (Xresources) colors"
+  echo "  -d,--diff <file>     Print compact differences between the (hardcoded) test colors, current system (Xresources) colors, and colors from (Xresources format) file"
   echo "  -n,--najib           Print Najib's color scheme"
   echo ""
 }
@@ -744,13 +823,14 @@ case $1 in
       printUsage
     fi
     ;;
-  #--file|-f)
-  #  if [ -z "$2" ]; then
-  #    printUsage
-  #  else
-  #    printTestColorWideWithFile "$2"
-  #  fi
-  #  ;;
+  --file|-f)
+    if [ -z "$2" ]; then
+      printUsage
+    else
+      #printTestColorWideWithFile "$2"
+      printCompactColorFromFile "$2"
+    fi
+    ;;
   --diff|-d)
     if [ -z "$2" ]; then
       printTestcolorVsSystemColor
