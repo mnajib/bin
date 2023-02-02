@@ -232,7 +232,8 @@ printTestColorWideWithFile () {
 
   #readarray -t colors < <( grep '\*\.color.*\:.*#' $f | sed 's/^\*\.color//' | sed 's/**://' | sort -n )
   #readarray -t colors < <( grep '\*.*color.*\:.*#' $f | sed 's/^.*color//' | sed 's/**://' | sort -n )
-  readarray -t colors < <( grep '\*.*color.*\:.*#' $f | grep -v '^!' | sed 's/^.*color//' | sed 's/**://' | sort -n )
+  #readarray -t colors < <( grep '\*.*color.*\:.*#' $f | grep -v '^!' | sed 's/^.*color//' | sed 's/**://' | sort -n )
+  readarray -t colors < <( xrdb -n $f | grep '\*.*color.*\:.*#' | grep -v '^!' | sed 's/^.*color//' | sed 's/**://' | sort -n )
   for (( i=0; i < ${#colors[@]}; i++ )); do
     systemColors[$i]="$( echo "${colors[$i]}" | awk '{print $2}' )"
     #echo "${systemColors[$i]}"
@@ -505,7 +506,8 @@ function printTestcolorfileVsSystemColor {
 
   #echo "$f"
   #readarray -t colors < <( grep '\*\.color.*\:.*#' $f | sed 's/^\*\.color//' | sed 's/**://' | sort -n )
-  readarray -t colors < <( grep '\*.*color.*\:.*#' $f | grep -v '^!' | sed 's/^.*color//' | sed 's/**://' | sort -n )
+  #readarray -t colors < <( grep '\*.*color.*\:.*#' $f | grep -v '^!' | sed 's/^.*color//' | sed 's/**://' | sort -n )
+  readarray -t colors < <( xrdb -n $f | grep '\*.*color.*\:.*#' | grep -v '^!' | sed 's/^.*color//' | sed 's/**://' | sort -n )
   for (( i=0; i < ${#colors[@]}; i++ )); do
     fileColors[$i]="$( echo "${colors[$i]}" | awk '{print $2}' )"
     #echo "${fileColors[$i]}"
