@@ -18,12 +18,15 @@ colorNames[1]="DRed   "
 #colorCodes[1]="cc0000"
 #colorCodes[1]="b82214"
 #colorCodes[1]="cc1100"
-colorCodes[1]="c7002e"
+colorCodes[1]="c7002e"  # <--- Najib's fav.
+#colorCodes[1]="870000"
+#colorCodes[1]="af0000" # <--- Najib's fav. ??
 colorNames[9]="LRed   "
 #colorCodes[9]="ff4c4c"
 #colorCodes[9]="ff4d4d"
 #colorCodes[9]="fe4534"
-colorCodes[9]="fe5748"
+colorCodes[9]="fe5748"  # <--- Najib's fav.
+#colorCodes[9]="ff0000"
 
 colorNames[2]="DGreen "
 colorCodes[2]="009200"
@@ -34,7 +37,7 @@ colorCodes[10]="00d700"
 #colorCodes[10]="9bd770"
 
 colorNames[3]="DYellow"
-colorCodes[3]="aa8800"
+colorCodes[3]="aa8800"  # <--- Najib's fav
 #colorCodes[3]="b8b814"
 #colorCodes[3]="c3b72c"
 colorNames[11]="LYellow"
@@ -420,6 +423,9 @@ function printTextWithColor {
 }
 
 function runTest {
+  echo "$@"
+  echo "$1 $2"
+
   #printf '\e[38;5;%d;48;5;%dm %7s \e[0m' 40 228 "Percubaan 1 2 3"
 
   #getSystemColor
@@ -851,7 +857,23 @@ case $1 in
   --xxx|-x)
     runTest
     ;;
+  runTest)
+    "$@"
+    ;;
   *)
     printUsage
+    #"$@"
     ;;
 esac
+
+#------------------------------------------------------------------------------
+# Check if the function exists (bash specific)
+#if declare -f "$1" > /dev/null
+#then
+#  # call arguments verbatim
+#  "$@"
+#else
+#  # Show a helpful error
+#  echo "'$1' is not a known function name" >&2
+#  exit 1
+#fi

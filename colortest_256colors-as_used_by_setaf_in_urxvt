@@ -1,15 +1,31 @@
 #!/usr/bin/env bash
 
-color(){
+colorbg-whitefg-wide(){
     for c; do
-        printf '\e[48;5;%dm%03d' $c $c
+        printf '\e[48;5;%dm %03d ' $c $c
+        #printf '\e[0m'
     done
-    printf '\e[0m \n'
+    printf '\e[0m\n'
+}
+
+colorfg-blackbg-wide(){
+    for c; do
+        printf '\e[48;5;0;38;5;%03dm %03d ' $c $c
+        #printf '\e[0m'
+    done
+    printf '\e[0m\n'
 }
 
 IFS=$' \t\n'
-color {0..15}
+
+colorbg-whitefg-wide {0..15}
 for ((i=0;i<6;i++)); do
-    color $(seq $((i*36+16)) $((i*36+51)))
+    colorbg-whitefg-wide $(seq $((i*36+16)) $((i*36+51)))
 done
-color {232..255}
+colorbg-whitefg-wide {232..255}
+
+colorfg-blackbg-wide {0..15}
+for ((i=0;i<6;i++)); do
+    colorfg-blackbg-wide $(seq $((i*36+16)) $((i*36+51)))
+done
+colorfg-blackbg-wide {232..255}
