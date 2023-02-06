@@ -518,16 +518,45 @@ function printCompactColorFromFile {
   echo ""
 }
 
+function getColorsFromXresourcesFile {
+  local f="$1"
+  local fileColors=( )
+
+  #echo "$f"
+  readarray -t fileColors < <( cat "$f" | grep '\*.*color.*\:.*#' | grep -v '^!' | sed 's/^.*color//' | sed 's/**://' | sort -n | awk '{print $2}' )
+  #for (( i=0; i < ${#fileColors[@]}; i++ )); do
+  #  echo "aaa: fileColors[${i}]=${fileColors[$i]}"
+  #done
+
+  # as function return
+  #declare -p fileColors
+  echo ${fileColors[@]}
+}
+
 #------------------------------------------------------------------------------
+function printTestcolorfileVsSystemColor-TEST {
+  local f="$1"
+  local colors=( )
+  local fileColors=( )
+
+  fileColors=( $( getColorsFromXresourcesFile "$f" ) )
+  #getColorsFromXresourcesFile "$f"
+  #eval $( getColorsFromXresourcesFile "$f" )
+  for (( i=0; i < ${#fileColors[@]}; i++ )); do
+    echo "bbb: fileColors[${i}]=${fileColors[$i]}"
+  done
+}
+
 function printTestcolorfileVsSystemColor {
   local f="$1"
   local colors=( )
   local fileColors=( )
 
-  readarray -t colors < <( xrdb -n $f | grep '\*.*color.*\:.*#' | grep -v '^!' | sed 's/^.*color//' | sed 's/**://' | sort -n )
-  for (( i=0; i < ${#colors[@]}; i++ )); do
-    fileColors[$i]="$( echo "${colors[$i]}" | awk '{print $2}' )"
-  done
+  #readarray -t colors < <( xrdb -n $f | grep '\*.*color.*\:.*#' | grep -v '^!' | sed 's/^.*color//' | sed 's/**://' | sort -n )
+  #for (( i=0; i < ${#colors[@]}; i++ )); do
+  #  fileColors[$i]="$( echo "${colors[$i]}" | awk '{print $2}' )"
+  #done
+  fileColors=( $( getColorsFromXresourcesFile "$f" ) )
 
   local XCOLORS=('color0 ' 'color1 ' 'color2 ' 'color3 ' 'color4 ' 'color5 ' 'color6 ' 'color7 ' 'color8 ' 'color9 ' 'color10' 'color11' 'color12' 'color13' 'color14' 'color15')
 
