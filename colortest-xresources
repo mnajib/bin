@@ -65,7 +65,8 @@ colorNames[15]="LWhite "
 colorCodes[15]="ffffff"
 
 declare -a COLORLIST
-COLORLIST=( 0 8 7 15 2 10 3 11 1 9 5 13 4 12 6 14 )
+#COLORLIST=( 0 8 7 15 2 10 3 11 1 9 5 13 4 12 6 14 )
+COLORLIST=( 2 10 3 11 1 9 5 13 4 12 6 14 15 7 8 0 )
 
 #------------------------------------------------------------------------------
 function color {
