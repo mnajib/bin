@@ -809,6 +809,20 @@ function printUsage {
 
 #------------------------------------------------------------------------------
 case $1 in
+  --tohex)
+    if [ -z "$2" ]; then
+      printUsage
+    else
+      tohex "$2"
+    fi
+    ;;
+  --fromhex)
+    if [ -z "$2" ]; then
+      printUsage
+    else
+      fromhex "$2"
+    fi
+    ;;
   --test|-t)
     if [ -z "$2" ]; then
       printTestColorWide
