@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+function kill1 {
+  ps -ef | grep defunct | grep -v grep | awk '{print $2}' | xargs kill -9
+}
+
+function trytokillzombies {
+  #parents_of_dead_kids=$(ps -ef | grep [d]efunct  | awk '{print $3}' | sort | uniq | egrep -v '^1$'); echo "$parents_of_dead_kids" | xargs kill
+  parents_of_dead_kids=$(ps -ef | grep [d]efunct  | awk '{print $3}' | sort | uniq | egrep -v '^1$'); echo "$parents_of_dead_kids" | xargs kill -9
+}
+
+zombies(){
+  echo "Children:"
+  ps -ef | head -n1
+  #ps -ef | grep defunct
+  ps -ef | grep defunct | egrep -v 'grep defunct'
+  echo "------------------------------"
+  echo "Parents:"
+  ppids="$(ps -ef | grep defunct | awk '{ print $3 }')"
+  echo "$ppids" | while read ppid; do
+    ps -A | grep "$ppid"
+  done
+}
+
+#kill1
+#trytokillzombies
+zombies
