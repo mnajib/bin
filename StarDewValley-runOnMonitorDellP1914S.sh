@@ -11,7 +11,8 @@ PATH5=${PATH2}/Stardew\ Valley
 # Thinkpad X220 sakinah: 1366x768
 #Xephyr -br -ac -noreset -screen 1080x768 :1 &
 #Xephyr -br -ac -noreset -screen 1280x960 :1 &
-Xephyr -br -ac -noreset -screen 1366x740 :1 &  # sakinah
+Xephyr -br -ac -noreset -screen 1280x1024 :1 &
+#Xephyr -br -ac -noreset -screen 1366x740 :1 &  # sakinah
 #Xephyr -br -ac -noreset -screen 1278x750 :1 &   # zahrah
 
 # Reset StardewValley custom resolution
