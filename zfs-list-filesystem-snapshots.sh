@@ -38,6 +38,19 @@ function theUniversalList {
   '
 }
 
+function theUniversalList2 {
+  echo "----------------------------------------------------------------------------------"
+  echo " zfs list -t filesystem"
+  echo "----------------------------------------------------------------------------------"
+  zfs list -t filesystem
+  echo ""
+  echo "----------------------------------------------------------------------------------"
+  echo " zfs list -t snapshot"
+  echo "----------------------------------------------------------------------------------"
+  echo ""
+  zfs list -t snapshot
+}
+
 function listFilesystems {
   local a='\
   echo "----------------------------------------------------------------------------------"; \
@@ -80,6 +93,7 @@ case "${1}" in
      theList
      ;;
   *)
-     theUniversalList
+     #theUniversalList
+     theUniversalList2
      ;;
 esac
