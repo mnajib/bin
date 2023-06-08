@@ -1,14 +1,22 @@
 #!/usr/bin/env bash
 
-watch '
+watch '\
   echo "----------------------------------------------------------------------------------"; \
-  echo " zpool list -v"; \
+  echo " zfs list -t filesystem"; \
   echo "----------------------------------------------------------------------------------"; \
-  zpool list -v ; \
+  zfs list -t filesystem; \
   echo ""; \
   echo "----------------------------------------------------------------------------------"; \
-  echo " zpool status -v"; \
+  echo " zfs list -t snapshot"; \
   echo "----------------------------------------------------------------------------------"; \
-  zpool status -v; \
-  echo "----------------------------------------------------------------------------------"; \
+  echo ""; \
+  echo "najibzfspool1/home"; \
+  echo "------------------"; \
+  echo ""; \
+  zfs list -t snapshot najibzfspool1/home; \
+  echo ""; \
+  echo "najibzfspool1/root"; \
+  echo "------------------"; \
+  echo ""; \
+  zfs list -t snapshot najibzfspool1/root; \
   '
