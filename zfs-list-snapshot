@@ -1,2 +1,92 @@
 #!/usr/bin/env bash
-zfs list -t snapshot
+
+#zfs list -t snapshot
+#zfs list -t snapshot | ed
+
+#zfs list -t snapshot | (head -10; tail -10)
+#zfs list -t snapshot | (head -30; echo "."; echo "."; echo "."; tail -30)
+
+# Not work
+#alias hat='(head -5 && echo "^^^------vvv" && tail -5) < '
+#zfs list -t snapshot | hat
+
+#zfs list -t snapshot | cat -n | { head -n 20; echo "    ..."; tail -n 20; } 
+
+function headAndTail {
+  local COUNT=${1:-10}
+  local IT=$(cat /dev/stdin)
+  echo "$IT" | head -n$COUNT
+  echo "..."
+  echo "$IT" | tail -n$COUNT
+}
+
+function headAndTail2 {
+  local COUNT=${1:-10}
+  local IT=$(cat /dev/stdin)
+
+  # Get header
+  echo "$IT" | head -n1
+  echo "    ------------------------------------------------------------------"
+  echo "    HEAD $COUNT"
+  echo "    ------------------------------------------------------------------"
+
+  # First x lines
+  #echo "$IT" | head -n$COUNT | tail -n$((${COUNT}-1))
+  #echo "$IT" | grep '/home' | cat -n | head -n$COUNT | tail -n$((${COUNT}-1))
+  #echo "$IT" | grep '/home' | cat -n | head -n$((${COUNT}+1)) | tail -n$((${COUNT}-0))
+  echo "$IT" | grep '/home' | head -n$((${COUNT}+1)) | tail -n$((${COUNT}-0))
+
+  # Print some marker
+  #echo "    .................................................................."
+  echo "    ..."
+
+  # Last x lines
+  echo "    ------------------------------------------------------------------"
+  echo "    TAIL $COUNT"
+  echo "    ------------------------------------------------------------------"
+  echo "    ..."
+  #echo "$IT" | tail -n$COUNT
+  #echo "$IT" | grep '/home' | cat -n | tail -n$COUNT
+  echo "$IT" | grep '/home' | tail -n$COUNT
+}
+
+function myTail {
+  local COUNT=${1:-10}
+  local IT=$(cat /dev/stdin)
+
+  # Get header
+  echo "$IT" | head -n1
+
+  # First x lines
+  #echo "    ------------------------------------------------------------------"
+  #echo "    HEAD $COUNT"
+  #echo "    ------------------------------------------------------------------"
+  #echo "$IT" | head -n$COUNT | tail -n$((${COUNT}-1))
+  #echo "$IT" | grep '/home' | cat -n | head -n$COUNT | tail -n$((${COUNT}-1))
+  #echo "$IT" | grep '/home' | cat -n | head -n$((${COUNT}+1)) | tail -n$((${COUNT}-0))
+  #echo "$IT" | grep '/home' | head -n$((${COUNT}+1)) | tail -n$((${COUNT}-0))
+
+  # Print some marker
+  #echo "    .................................................................."
+  #echo "    ..."
+
+  # Last x lines
+  #echo "    ------------------------------------------------------------------"
+  #echo "    TAIL $COUNT"
+  #echo "    ------------------------------------------------------------------"
+  echo "    ..."
+  #echo "$IT" | tail -n$COUNT
+  echo "$IT" | grep 'najibzfspool1/home' | cat -n | tail -n$COUNT
+  #echo "$IT" | grep '/home' | tail -n$COUNT
+}
+
+# Test
+#seq 100 | headAndTail 4
+# Working good
+#zfs list -t snapshot | cat -n | headAndTail 30
+
+#zfs list -t snapshot | cat -n | headAndTail2 30
+#zfs list -t snapshot | cat -n | myTail 60
+zfs list -t snapshot | myTail 60
+#seq 100 | cat -n | headAndTail2 30
+#seq 100 | awk '{print "/home" $1}' | cat -n | headAndTail2 30

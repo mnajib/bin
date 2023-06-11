@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+# Note that lsblk might be executed in time when udev does not have all
+# information about recently added or modified devices yet. In this case it is
+# recommended to use udevadm settle before lsblk to synchronize with udev.
+udevadm settle
+sleep 1
+
+echo "------------------------------------------------------------------------"
+echo "lsblk -pf"
+echo "------------------------------------------------------------------------"
+lsblk -pf
+#lsblk -pfmtz
+
+echo ""
+echo "------------------------------------------------------------------------"
+echo " df -hT"
+echo "------------------------------------------------------------------------"
+df -hT
