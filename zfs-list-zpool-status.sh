@@ -30,16 +30,21 @@ function aa2 {
 
 function bb1 {
   echo "----------------------------------------------------------------------------------"
-  echo " Which disk is which?"
+  echo " Which disk is which? (by-id)"
   #echo "----------------------------------------------------------------------------------"
-  ls -FilahR /dev/disk/by-id | grep ' ata-' | egrep -v '[0-9]$' | cat -n
+  #ls -FilahR /dev/disk/by-id | grep ' ata-' | egrep -v '[0-9]$' | cat -n
+  #ls -FilahR /dev/disk/by-id | egrep -v '[0-9]$' | grep ' ata-' | cat -n
+  ls -Filah /dev/disk/by-id | egrep -v '[0-9]$' | grep '[a-z]$' | grep ' ata-' | cat -n
 }
 
 function bb2 {
   echo "----------------------------------------------------------------------------------"
-  echo " Which disk is which??"
+  echo " Which disk is which? (by-uuid)"
   #echo "----------------------------------------------------------------------------------"
-  ls -FilahR /dev/disk/by-uuid | grep -v '[0-9]$' | cat -n
+  #ls -FilahR /dev/disk/by-uuid | grep -v '[0-9]$' | cat -n
+  #ls -Filah /dev/disk/by-uuid | grep -v '[0-9]$' | cat -n
+  ls -Filah /dev/disk/by-uuid | grep -v '[0-9]$' | grep -v './$' | cat -n
+  #ls -Filah /dev/disk/by-uuid | egrep 'sd[a-z].*$' | cat -n
 }
 
 aa2
