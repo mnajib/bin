@@ -12,7 +12,7 @@ echo "------------------------------------------------------------------------"
 #lsblk -pfi
 ##lsblk -pfmtz
 #lsblk -pfi -o NAME,SIZE,SERIAL,UUID,LABEL,FSTYPE,FSAVAIL,FSUSE%,MOUNTPOINTS
-lsblk -pfi -o NAME,SIZE,SERIAL,UUID,FSTYPE,FSVER,LABEL,FSAVAIL,FSUSE%,MOUNTPOINTS
+lsblk -pfi -o NAME,SIZE,SERIAL,WWN,UUID,FSTYPE,FSVER,LABEL,FSAVAIL,FSUSE%,MOUNTPOINTS
 
 echo ""
 echo "------------------------------------------------------------------------"
