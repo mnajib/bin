@@ -34,7 +34,8 @@ function bb1 {
   #echo "----------------------------------------------------------------------------------"
   #ls -FilahR /dev/disk/by-id | grep ' ata-' | egrep -v '[0-9]$' | cat -n
   #ls -FilahR /dev/disk/by-id | egrep -v '[0-9]$' | grep ' ata-' | cat -n
-  ls -Filah /dev/disk/by-id | egrep -v '[0-9]$' | grep '[a-z]$' | grep ' ata-' | cat -n
+  #ls -Filah /dev/disk/by-id | egrep -v '[0-9]$' | grep '[a-z]$' | grep ' ata-' | cat -n
+  ls -Filah /dev/disk/by-id | egrep -v '[0-9]$' | grep '[a-z]$' | grep ' ata-' | awk '{ print $12 "\t<--\t" $10 }' | sed 's/^..\/..\///' | sort -n | cat -n
 }
 
 function bb2 {
@@ -43,8 +44,9 @@ function bb2 {
   #echo "----------------------------------------------------------------------------------"
   #ls -FilahR /dev/disk/by-uuid | grep -v '[0-9]$' | cat -n
   #ls -Filah /dev/disk/by-uuid | grep -v '[0-9]$' | cat -n
-  ls -Filah /dev/disk/by-uuid | grep -v '[0-9]$' | grep -v './$' | cat -n
+  #ls -Filah /dev/disk/by-uuid | grep -v '[0-9]$' | grep -v './$' | cat -n
   #ls -Filah /dev/disk/by-uuid | egrep 'sd[a-z].*$' | cat -n
+  ls -Filah /dev/disk/by-uuid/ | grep ' -> ' | awk '{ print $12 "\t<-\t" $10 }' | sort -t " " -k 3 | sed 's/^..\/..\///' | grep -v '^dm' | cat -n
 }
 
 aa2
