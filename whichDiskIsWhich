@@ -57,9 +57,9 @@ function printDiskByPath {
   diskByPath
 }
 
-printZpoolList
-printZpoolStatus
-#printDiskByUUID
-#printDiskByID
-#printDiskByPath
+#printZpoolList
+#printZpoolStatus
+printDiskByUUID
+printDiskByID
+printDiskByPath
 echo "----------------------------------------------------------------------------------"
