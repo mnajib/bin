@@ -1,20 +1,37 @@
 #!/usr/bin/env bash
 
 function printTheVars {
-  echo "XDG_RUNTIME_DIR: ${XDG_RUNTIME_DIR}"
-  echo "TMUX_TMPDIR: ${TMUX_TMPDIR}"
+  echo "  XDG_RUNTIME_DIR: ${XDG_RUNTIME_DIR}"
+  echo "  TMUX_TMPDIR: ${TMUX_TMPDIR}"
 }
 
 function exportTheVars {
+  # if using bash shell
   export TMUX_TMPDIR="${XDG_RUNTIME_DIR}"
+  # if using fish shell
+  set TMUX_TMPDIR "${XDG_RUNTIME_DIR}"
+  #set -g $TMUX_TMPDIR "${XDG_RUNTIME_DIR}"
 }
 
-#printTheVars
-exportTheVars
-#printTheVars
+function doTest {
+  # Check/test the tmux
+  tmux ls
+}
 
-# Check/test the tmux
-#tmux ls
+echo "Print current value"
+printTheVars
+sleep 1
+#doTest
+
+echo "Setting value to TMUX_TMPDIR"
+sleep 1
+exportTheVars
+
+echo "Print current value"
+printTheVars
+sleep 1
+#doTest
 
 # Run the tmux
-tmux a -t main
+#tmux a -t main
+#env TMUX_TMPDIR="${XDG_RUNTIME_DIR}" tmux a -t main
