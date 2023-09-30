@@ -18,20 +18,20 @@ function doTest {
   tmux ls
 }
 
-echo "Print current value"
-printTheVars
-sleep 1
+#echo "Print current value"
+#printTheVars
+#sleep 1
 #doTest
 
-echo "Setting value to TMUX_TMPDIR"
-sleep 1
-exportTheVars
+#echo "Setting value to TMUX_TMPDIR"
+#sleep 1
+#exportTheVars
 
-echo "Print current value"
-printTheVars
-sleep 1
+#echo "Print current value"
+#printTheVars
+#sleep 1
 #doTest
 
 # Run the tmux
 #tmux a -t main
-#env TMUX_TMPDIR="${XDG_RUNTIME_DIR}" tmux a -t main
+env TMUX_TMPDIR="${XDG_RUNTIME_DIR}" tmux a -t main
