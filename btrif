@@ -1,0 +1,223 @@
+#!/usr/bin/env bash
+
+#
+# NOTE:
+# -----
+#
+# To create RAID-1 (mirror):
+#   mkfs.btrfs -L MyMirrorDisks -m raid1 -d raid1 /dev/sdg /dev/sdh
+#
+# To add device:
+#   btrfs device add -f /dev/sdi /mnt/btr_pool1
+#
+# To balance
+#   btrfs balance start /mnt/btr_pool1
+# To changing RAID levels, ... filesystem
+#   btrfs balance start -dconvert raid1 -mconvert=raid1 /mnt/btr_pool1
+# To check balance status
+#   btrfs balance status /mnt/btr_pool1
+#
+# To defrag
+#   btrfs filesystem defragment /mnt/btr_pool1
+#
+# In case that 1 of the disks failed (example in mirror mode), then mount the remaining device in degraded mode.
+# Check which device(s) is still alive with:
+#   btrfs filesystem show
+# Then, mount in degraded mode the available device (example: /dev/sdg):
+#   mkdir /tmp/kkk
+#   mount -o degraded /dev/sdg /tmp/kkk/mount/point/
+# We still can read and write while on the degraded mode.
+#
+# To remove device
+#   btrfs device delete /dev/sdi /mnt/btr_pool1
+# To remove missing device
+#   btrfs device delete missing /mnt/btr_pool1
+#
+# To scrub
+#   sudo btrfs scrub start /mnt/btr_pool1
+# To check scrub status
+#   sudo btrfs scrub status /mnt/btr_pool1
+
+DEVICE1=""
+DEVICE2=""
+MOUNTPOINT1="/mnt/btr_pool1"
+MOUNTPOINT2="/mnt/btr_pool2"
+
+# Start new tmux session
+#...
+
+#
+# Usage:
+#   monitorScrubStatus /mnt/btr_pool1
+#   monitorScrubStatus /mnt/btr_pool2
+#
+monitorInTmuxPane() {
+    local MOUNTPOINT="$1"
+
+    #tmux new-session -d \; 'watch btrfs scrub status /mnt/btr_pool1' \; \
+    #    split-pane 'watch btrfs scrub status /mnt/btr_pool2' \; \
+    #    split-window -h 'watch btrfs device stats -T /mnt/btr_pool1' \; \
+    #    split-window -v 'watch btrfs device stats -T /mnt/btr_pool1'
+
+    tmux split-pane "watch scrubStatus $MOUNTPOINT" \; \
+        select-layout even-vertical
+
+    #tmux select-layout even-vertical
+    #tmux select-layout even-horizontal
+}
+
+printTitle(){
+    local title="$1"
+    echo '/##############################################'
+    echo "| $1"
+    echo '\##############################################'
+    echo
+}
+
+printReportAll() {
+    printTitle "df -hT | grep btrfs"
+    #dfInfo
+    diskInfo
+
+    echo
+    printTitle "btrfs filesystem show"
+    filesystemShow
+
+    echo
+    printTitle "btrfs filesystem df /mnt/btr_pool1"
+    btrfs filesystem df /mnt/btr_pool1
+
+    echo
+    printTitle "btrfs filesystem df /mnt/btr_pool2"
+    btrfs filesystem df /mnt/btr_pool2
+
+    echo
+    printTitle "btrfs scrub status /mnt/btr_pool1"
+    scrubStatus /mnt/btr_pool1
+
+    echo
+    printTitle "btrfs scrub status /mnt/btr_pool2"
+    scrubStatus /mnt/btr_pool2
+
+    echo
+    printTitle "btrfs device stats /mnt/btr_pool1"
+    deviceStats /mnt/btr_pool1
+
+    echo
+    printTitle "btrfs device stats /mnt/btr_pool2"
+    deviceStats /mnt/btr_pool2
+
+    echo
+    printTitle "btrfs balance status /mnt/btr_pool1"
+    balanceStatus /mnt/btr_pool1
+
+    echo
+    printTitle "btrfs balance status /mnt/btr_pool2"
+    balanceStatus /mnt/btr_pool2
+
+    echo
+    btrbkInfo
+}
+
+#---------------------------------------------------------------
+# btrbk
+
+btrbkInfo() {
+    printTitle "btrbk stats"
+    sudo btrbk stats
+    echo
+    printTitle "btrbk usage"
+    btrbk usage
+}
+
+#---------------------------------------------------------------
+
+dfInfo() {
+    df -hT | grep btrfs
+}
+
+diskInfo() {
+    lsblk -pf
+
+    echo
+    #dfInfo
+    df -hT | grep btrfs
+
+    echo
+    mount | grep btrfs
+}
+
+scrubStatus() {
+    local MOUNTPOINT="$1"
+    sudo btrfs scrub status $MOUNTPOINT
+}
+
+deviceStats() {
+    local MOUNTPOINT="$1"
+    sudo btrfs device stats -T $MOUNTPOINT
+}
+
+balanceStatus() {
+    local MOUNTPOINT="$1"
+    sudo btrfs balance status $MOUNTPOINT;
+}
+
+filesystemShow() {
+    #local MOUNTPOINT="$1"
+    sudo btrfs filesystem show --human-readable
+}
+
+about(){
+    #echo "$0"
+    echo "Version: 0.0.1"
+    echo "Author: Muhammad Najib Bin Ibrahim"
+    echo "Email: mnajib@gmail.com"
+}
+
+version(){
+    echo "$0 v0.0.1"
+}
+
+usage(){
+    echo "Usage: $0 [OPTIONS]"
+    echo "OPTIONS:"
+    echo "  -h, --help        Display this help message."
+    echo "  -v, --version     Display this script version."
+    echo "  -a, --about       Display about this script."
+}
+
+match() {
+  case $1 in
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    -v|--version)
+      version
+      exit 0
+      ;;
+    -a|--about)
+      about
+      exit 0
+      ;;
+    *)
+      # without any arguments
+      if [ -z "$1" ]; then #if [ -n "$1"]; then
+        printReportAll
+        #printReportAll | less
+      else #If any other argument(s)
+        echo "Invalid input. Please enter a valid input."
+        exit 1
+      fi
+      # without any arguments
+      #printReportAll
+      ;;
+  esac
+}
+
+main() {
+    match "$@"
+}
+
+#printReportAll
+main "$@"
