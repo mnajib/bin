@@ -9,6 +9,7 @@
 #
 # To add device:
 #   btrfs device add -f /dev/sdi /mnt/btr_pool1
+#   btrfs device add -f /dev/mapper/vg2-root2 /mnt/btr_pool1
 #
 # To balance
 #   btrfs balance start /mnt/btr_pool1
@@ -16,6 +17,8 @@
 #   btrfs balance start -dconvert raid1 -mconvert=raid1 /mnt/btr_pool1
 # To check balance status
 #   btrfs balance status /mnt/btr_pool1
+# To fix/continue incomplete balance
+#   btrfs balance start convert=raid1,soft /mnt/btr_pool1
 #
 # To defrag
 #   btrfs filesystem defragment /mnt/btr_pool1
@@ -84,36 +87,40 @@ printReportAll() {
     filesystemShow
 
     echo
+    printTitle "btrfs filesystem usage /mnt/btr_pool1"
+    btrfs filesystem usage -T /mnt/btr_pool1
+
+    echo
     printTitle "btrfs filesystem df /mnt/btr_pool1"
     btrfs filesystem df /mnt/btr_pool1
 
-    echo
-    printTitle "btrfs filesystem df /mnt/btr_pool2"
-    btrfs filesystem df /mnt/btr_pool2
+    #echo
+    #printTitle "btrfs filesystem df /mnt/btr_pool2"
+    #btrfs filesystem df /mnt/btr_pool2
 
     echo
     printTitle "btrfs scrub status /mnt/btr_pool1"
     scrubStatus /mnt/btr_pool1
 
-    echo
-    printTitle "btrfs scrub status /mnt/btr_pool2"
-    scrubStatus /mnt/btr_pool2
+    #echo
+    #printTitle "btrfs scrub status /mnt/btr_pool2"
+    #scrubStatus /mnt/btr_pool2
 
     echo
     printTitle "btrfs device stats /mnt/btr_pool1"
     deviceStats /mnt/btr_pool1
 
-    echo
-    printTitle "btrfs device stats /mnt/btr_pool2"
-    deviceStats /mnt/btr_pool2
+    #echo
+    #printTitle "btrfs device stats /mnt/btr_pool2"
+    #deviceStats /mnt/btr_pool2
 
     echo
     printTitle "btrfs balance status /mnt/btr_pool1"
     balanceStatus /mnt/btr_pool1
 
-    echo
-    printTitle "btrfs balance status /mnt/btr_pool2"
-    balanceStatus /mnt/btr_pool2
+    #echo
+    #printTitle "btrfs balance status /mnt/btr_pool2"
+    #balanceStatus /mnt/btr_pool2
 
     echo
     btrbkInfo
