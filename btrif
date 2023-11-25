@@ -43,8 +43,8 @@
 
 DEVICE1=""
 DEVICE2=""
-MOUNTPOINT1="/mnt/btr_pool1"
-MOUNTPOINT2="/mnt/btr_pool2"
+MOUNTPOINT1="/mnt/btrbk_pool1"              # "/mnt/btr_pool1"
+#MOUNTPOINT2="/mnt/btrbk_pool2"              # "/mnt/btr_pool2"
 
 # Start new tmux session
 #...
@@ -62,7 +62,7 @@ monitorInTmuxPane() {
     #    split-window -h 'watch btrfs device stats -T /mnt/btr_pool1' \; \
     #    split-window -v 'watch btrfs device stats -T /mnt/btr_pool1'
 
-    tmux split-pane "watch scrubStatus $MOUNTPOINT" \; \
+    tmux split-pane "watch scrubStatus $MOUNTPOINT1" \; \
         select-layout even-vertical
 
     #tmux select-layout even-vertical
@@ -87,40 +87,40 @@ printReportAll() {
     filesystemShow
 
     echo
-    printTitle "btrfs filesystem usage /mnt/btr_pool1"
-    btrfs filesystem usage -T /mnt/btr_pool1
+    printTitle "btrfs filesystem usage ${MOUNTPOINT1}"
+    btrfs filesystem usage -T ${MOUNTPOINT1}
 
     echo
-    printTitle "btrfs filesystem df /mnt/btr_pool1"
-    btrfs filesystem df /mnt/btr_pool1
+    printTitle "btrfs filesystem df ${MOUNTPOINT1}"
+    btrfs filesystem df ${MOUNTPOINT1}
 
     #echo
-    #printTitle "btrfs filesystem df /mnt/btr_pool2"
-    #btrfs filesystem df /mnt/btr_pool2
+    #printTitle "btrfs filesystem df ${MOUNTPOINT1}"
+    #btrfs filesystem df ${MOUNTPOINT1}
 
     echo
-    printTitle "btrfs scrub status /mnt/btr_pool1"
-    scrubStatus /mnt/btr_pool1
+    printTitle "btrfs scrub status ${MOUNTPOINT1}"
+    scrubStatus ${MOUNTPOINT1}
 
     #echo
-    #printTitle "btrfs scrub status /mnt/btr_pool2"
-    #scrubStatus /mnt/btr_pool2
+    #printTitle "btrfs scrub status ${MOUNTPOINT1}"
+    #scrubStatus ${MOUNTPOINT1}
 
     echo
-    printTitle "btrfs device stats /mnt/btr_pool1"
-    deviceStats /mnt/btr_pool1
+    printTitle "btrfs device stats ${MOUNTPOINT1}"
+    deviceStats ${MOUNTPOINT1}
 
     #echo
-    #printTitle "btrfs device stats /mnt/btr_pool2"
-    #deviceStats /mnt/btr_pool2
+    #printTitle "btrfs device stats ${MOUNTPOINT1}"
+    #deviceStats ${MOUNTPOINT1}
 
     echo
-    printTitle "btrfs balance status /mnt/btr_pool1"
-    balanceStatus /mnt/btr_pool1
+    printTitle "btrfs balance status ${MOUNTPOINT1}"
+    balanceStatus ${MOUNTPOINT1}
 
     #echo
-    #printTitle "btrfs balance status /mnt/btr_pool2"
-    #balanceStatus /mnt/btr_pool2
+    #printTitle "btrfs balance status ${MOUNTPOINT1}"
+    #balanceStatus ${MOUNTPOINT1}
 
     echo
     btrbkInfo
@@ -156,17 +156,17 @@ diskInfo() {
 
 scrubStatus() {
     local MOUNTPOINT="$1"
-    sudo btrfs scrub status $MOUNTPOINT
+    sudo btrfs scrub status $MOUNTPOINT1
 }
 
 deviceStats() {
     local MOUNTPOINT="$1"
-    sudo btrfs device stats -T $MOUNTPOINT
+    sudo btrfs device stats -T $MOUNTPOINT1
 }
 
 balanceStatus() {
     local MOUNTPOINT="$1"
-    sudo btrfs balance status $MOUNTPOINT;
+    sudo btrfs balance status $MOUNTPOINT1;
 }
 
 filesystemShow() {
