@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+nix-shell -p mindustry glew -I nixpkgs=channel:nixos-unstable
+
+mindustry
