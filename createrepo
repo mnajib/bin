@@ -1,0 +1,2 @@
+
+# rsync -avrz --progress rsync://centos.exabytes.com.my/main/7/os/x86_64/ /var/www/html/repos/centos/7/os/x86_64/

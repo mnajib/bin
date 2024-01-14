@@ -1,0 +1,16 @@
+#!/usr/bin/expect -f
+
+spawn ssh root@v.irc.my -p 44447
+#exp_internal 1
+set timeout 60
+expect "*?assword:*"
+send "root123\r"
+send "\r"
+expect "#"
+#send "ssh -fN -R 7777:localhost:22 najib@najib.duckdns.org -p 80\r"
+send "ssh -fN -R 7779:localhost:44447 najib@najib.duckdns.org -p 80\r"
+#send "ssh -fN -R 7777:v.irc.my:44447 najib@najib.duckdns.org -p 80\r"
+expect "*?assword:*"
+send "najibNajib123nLM1s#1\r"
+send "\r"
+interact

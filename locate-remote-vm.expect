@@ -1,0 +1,12 @@
+#!/usr/bin/expect -f
+set host [lindex $argv 0]
+set user [lindex $argv 1]
+set password [lindex $argv 2]
+#spawn virsh destroy "$vm";
+#spawn ssh -Y $user@$host
+spawn virsh list
+expect "Please enter your authentication name:"
+send "$user\r";
+expect "Please enter your password:"
+send "$password\r";
+#interact

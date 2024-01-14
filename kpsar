@@ -1,0 +1,25 @@
+#!/usr/bin/expect -f 
+set timeout 20
+set host [lindex $argv 0]
+spawn ssh "felda\@$host"
+expect "password:"
+send "pr0%d4t4\r"
+expect "$ "
+send "su -\r"
+expect "Password: "
+send "(rMl2@f31D4)\r"
+interact
+
+#set nhost 192.168.1.84
+#set timeout -1
+#expect "# " 
+#send "hostname\r"
+#spawn scp -pr /var/log/sa najib\@$nhost:/mnt/data/DATA/_master/_lunas.felda/$host/
+#send "scp -pr /var/log/sa najib\@$nhost:/tmp/"
+#set npass "p"
+##expect "Are you sure you want to continue connecting (yes/no)?" }
+##send "yes\r"
+#expect {
+#	password: {send "$npass\r" ; exp_continue}
+#	eof exit
+#}

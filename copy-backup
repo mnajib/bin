@@ -1,0 +1,2 @@
+#!/bin/bash
+scp -oPort=80 DATA/_vnet.clients/_TNMS/README* najib@najib.duckdns.org:~/

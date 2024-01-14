@@ -1,0 +1,2 @@
+rdesktop-vrdp -g 1024x768 175.139.183.170
+rdesktop-vrdp -g 1024x768 -u administrator -p utmjbp@ssw0rd 161.139.18.161

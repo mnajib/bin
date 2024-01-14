@@ -1,0 +1,11 @@
+#!/usr/bin/expect 
+set timeout 20
+set host [lindex $argv 0]
+spawn ssh "felda\@$host"
+expect "password:"
+send "pr0%d4t4\r"
+expect "$ "
+send "su -\r"
+expect "Password: "
+send "(rMl2@f31D4)\r";
+interact

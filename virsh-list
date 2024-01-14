@@ -1,0 +1,16 @@
+#!/usr/bin/expect -f
+
+#set user [lindex $argv 0]
+#set password [lindex $argv 1]
+set user "root"
+set password "root123"
+
+spawn virsh list
+expect "Please enter your authentication name:"
+send "$user\r";
+
+expect "Please enter your password:"
+send "$password\r";
+
+#expect "]#"
+interact

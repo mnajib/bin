@@ -1,0 +1,150 @@
+#!/bin/ksh
+
+# The first step in this long-term performance data collection is 
+# running sar normally on all the servers that I want to monitor. 
+# In the default setup, sar collects data during normal business 
+# hours and generates a report in the evening (Monday through Friday). 
+# Since my interest in long-term analysis was limited to keeping 
+# track of CPU usage, I collected only a small portion of each daily 
+# report to generate monthly averages.
+#
+# The script shown below assumes that the sar* (report) files have 
+# been gathered in /perf/data/ directories. File dates are preserved 
+# during the transfer and files more than one month old are removed 
+# to keep the directories current and avoid having to question whether
+# a file named sar06, for example, represents system performance on 
+# May 6th or June 6th.
+#
+# Invoked directly, this script prepares a monthly report on a single
+# server. The report will include the average CPU usage line from the
+# sar report for each of the sar reports created in the prior 30 days. 
+# Notice that the report below skips weekends (when performance 
+# statistics are not collected). 
+
+# /perf/bin/showUsage
+# /perf/bin/showUsageAll
+# /perf/data/lengkuas/usage
+# /perf/data/serai/usage
+# /perf/data/nangka/usage
+# /perf/data/cempedak/usage
+
+#usage: $0 hitam /mnt/tmp/hitam/var/log/sa/sar
+
+# -----------------------------------------------------------------
+# init variables
+# -----------------------------------------------------------------
+PerfDir="/perf/data"
+#sarDir="/var/log/sa"
+sarDir="${PerfDir}/$1"
+#sarDir="${2}"
+USR=0
+SYS=
+WIO=0
+IDLE=0
+DAYS=0
+
+# -----------------------------------------------------------------
+# Require system name
+# -----------------------------------------------------------------
+if [ $# == 0 ]; then
+    echo "Usage: $0 "
+    exit 1
+fi
+
+# -----------------------------------------------------------------
+# Exit if no directory
+# -----------------------------------------------------------------
+#if [ ! -d $PerfDir/$1 ]; then
+if [ ! -d $sarDir ]; then
+    print "No data for $1 in ${sarDir}"
+#    exit 2
+fi
+
+# -----------------------------------------------------------------
+# go to data directory for particular system
+# -----------------------------------------------------------------
+#cd $PerfDir/$1
+cd ${sarDir}
+
+# -----------------------------------------------------------------
+# Add padding for nice columns
+# -----------------------------------------------------------------
+if [ ${#1} -lt 7 ]; then
+    NAME="$1:\t"
+else
+    NAME="$1:"
+fi
+
+# -----------------------------------------------------------------
+# Exit if there are no data files
+# -----------------------------------------------------------------
+#if [ `ls $sarDir/$1/sar* 2>/dev/null | wc -l` == 0 ]; then
+if [ `ls $sarDir/sar* 2>/dev/null | wc -l` == 0 ]; then
+    echo "$NAME No data"
+    exit 1
+fi
+
+# -----------------------------------------------------------------
+# add heading
+# -----------------------------------------------------------------
+#print "$NAME\t%usr\t%sys\t%wio\t%idle"
+print "$NAME\t%user\t%system\t%iowait\t%idle"
+
+# -----------------------------------------------------------------
+# process sar files in date order
+# -----------------------------------------------------------------
+for file in `ls -tr sar*`
+do
+    if [ -z $file ]; then
+	continue
+    fi
+    ls -l $file | read x x x x x MO DAY etc
+    if [ ${#DAY} == 1 ]; then
+	DAY=" $DAY"
+    fi
+    #grep Average $file | head -1 | read x usr sys wio idle || continue
+    #grep Average $file | head -1 
+    grep Average $file | head -1 | read x x usr x sys wio x x x x idle || continue
+    print "$MO $DAY\t\t$usr\t$sys\t$wio\t$idle"
+    #print "$MO $DAY\t\t$usr"
+    #print "$MO $DAY\t\t$sys"
+    #print "$MO $DAY\t\t$wio"
+    #print "$MO $DAY\t\t$idle"
+    # accumulate totals
+    USR=$(($USR + $usr))
+    SYS=$(($SYS + $sys))
+    WIO=$(($WIO + $wio))
+    IDLE=$(($IDLE + $idle))
+    DAYS=$(($DAYS + 1))
+done
+
+# compute averages
+UAVG=$(($USR / $DAYS))
+SAVG=$(($SYS / $DAYS))
+WAVG=$(($WIO / $DAYS))
+IAVG=$(($IDLE / $DAYS))
+
+# print averages
+print "Average\t\t$UAVG\t$SAVG\t$WAVG\t$IAVG"
+
+# If 1st of month, add usage for previous month to usage log
+date | read x MO DAY time tz YR
+if [ $DAY == 1 ]; then
+    case $MO in
+        Jan) PREV="Dec";;
+        Feb) PREV="Jan";;
+        Mar) PREV="Feb";;
+        Apr) PREV="Mar";;
+        May) PREV="Apr";;
+        Jun) PREV="May";;
+        Jul) PREV="Jun";;
+        Aug) PREV="Jul";;
+        Sep) PREV="Aug";;
+        Oct) PREV="Sep";;
+        Nov) PREV="Oct";;
+        Dec) PREV="Nov";;
+    esac
+    # add previous month's usage to system-specific file
+    print "$PREV $YR: \t$UAVG\t$SAVG\t$WAVG\t$IAVG" >> /perf/data/$1/usage
+fi
+

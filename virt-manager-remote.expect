@@ -1,0 +1,26 @@
+#!/usr/bin/expect -f
+set host [lindex $argv 0]
+set user [lindex $argv 1]
+set password [lindex $argv 2]
+
+# remote ssh login
+#spawn virsh destroy "$vm";
+spawn ssh -Y $user@$host
+#expect "password:"
+#expect "root@node2.local's password:"
+expect "'s password:"
+#send "$user\r";
+#expect "Please enter your password:"
+send "$password\r";
+expect "]#"
+
+#spawn /usr/bin/watch /usr/bin/virsh list
+#spawn /usr/bin/virsh list
+#spawn virsh list
+#spawn env
+#spawn bash
+#env
+#expect "Please enter your authentication name:"
+#send "$password\r";
+
+interact

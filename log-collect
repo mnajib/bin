@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Usage: log-collect [thisIsANote]
+
+DESTDIR="/root"
+FILENAME="logovirthadebug"
+HOSTNAME=`hostname`
+DATE=`date +%Y-%m-%d_%H-%M-%S`
+
+FILES="/var/log/messages /var/log/dmesg /var/log/sanlock.log /var/log/ovirt-hosted-engine-ha/*.log /var/log/vdsm/*.log /var/log/log.ctdb /var/log/libvirt/qemu/*.log /var/log/glusterfs/*.log /var/log/glusterfs/bricks/*.log"
+FILES="$FILES /var/log/httpd/*_log /var/log/ovirt-engine/*.log" # for ovirt-engine
+TAG="-$1"
+
+tar -vczf $DESTDIR/$FILENAME-$HOSTNAME-$DATE$TAG.log.tgz $FILES

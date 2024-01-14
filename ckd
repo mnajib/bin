@@ -1,0 +1,1 @@
+diff -r --side-by-side --ignore-blank-lines --ignore-space-change -q $1 $2
