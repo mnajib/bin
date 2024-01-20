@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+#
+# Usage example:
+#   launch-using-nix-shell fluxbox
+#
+
+nix-shell -I nixpkgs=channel:nixos-unstable -p "$@"
