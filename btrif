@@ -43,7 +43,8 @@
 
 DEVICE1=""
 DEVICE2=""
-MOUNTPOINT1="/mnt/btrbk_pool1"              # "/mnt/btr_pool1"
+#MOUNTPOINT1="/mnt/btrbk_pool1"              # "/mnt/btr_pool1"
+MOUNTPOINT1="/mnt/btr_pool1"              # "/mnt/btr_pool1"
 #MOUNTPOINT2="/mnt/btrbk_pool2"              # "/mnt/btr_pool2"
 
 # Start new tmux session
@@ -55,175 +56,182 @@ MOUNTPOINT1="/mnt/btrbk_pool1"              # "/mnt/btr_pool1"
 #   monitorScrubStatus /mnt/btr_pool2
 #
 monitorInTmuxPane() {
-    local MOUNTPOINT="$1"
+  local MOUNTPOINT="$1"
 
-    #tmux new-session -d \; 'watch btrfs scrub status /mnt/btr_pool1' \; \
-    #    split-pane 'watch btrfs scrub status /mnt/btr_pool2' \; \
-    #    split-window -h 'watch btrfs device stats -T /mnt/btr_pool1' \; \
-    #    split-window -v 'watch btrfs device stats -T /mnt/btr_pool1'
+  #tmux new-session -d \; 'watch btrfs scrub status /mnt/btr_pool1' \; \
+  #    split-pane 'watch btrfs scrub status /mnt/btr_pool2' \; \
+  #    split-window -h 'watch btrfs device stats -T /mnt/btr_pool1' \; \
+  #    split-window -v 'watch btrfs device stats -T /mnt/btr_pool1'
 
-    tmux split-pane "watch scrubStatus $MOUNTPOINT1" \; \
-        select-layout even-vertical
+  tmux split-pane "watch scrubStatus $MOUNTPOINT1" \; \
+      select-layout even-vertical
 
-    #tmux select-layout even-vertical
-    #tmux select-layout even-horizontal
+  #tmux select-layout even-vertical
+  #tmux select-layout even-horizontal
 }
 
 printTitle(){
-    local title="$1"
-    echo '/##############################################'
-    echo "| $1"
-    echo '\##############################################'
-    echo
+  local title="$1"
+  echo '/##############################################'
+  echo "| $1"
+  echo '\##############################################'
+  echo
 }
 
 printReportAll() {
-    printTitle "df -hT | grep btrfs"
-    #dfInfo
-    diskInfo
+  local MOUNTPOINT1=$1
 
-    echo
-    printTitle "btrfs filesystem show"
-    filesystemShow
+  printTitle "df -hT | grep btrfs"
+  #dfInfo
+  diskInfo
 
-    echo
-    printTitle "btrfs filesystem usage ${MOUNTPOINT1}"
-    btrfs filesystem usage -T ${MOUNTPOINT1}
+  echo
+  printTitle "btrfs filesystem show"
+  filesystemShow
 
-    echo
-    printTitle "btrfs filesystem df ${MOUNTPOINT1}"
-    btrfs filesystem df ${MOUNTPOINT1}
+  echo
+  printTitle "btrfs filesystem usage ${MOUNTPOINT1}"
+  btrfs filesystem usage -T ${MOUNTPOINT1}
 
-    #echo
-    #printTitle "btrfs filesystem df ${MOUNTPOINT1}"
-    #btrfs filesystem df ${MOUNTPOINT1}
+  echo
+  printTitle "btrfs filesystem df ${MOUNTPOINT1}"
+  btrfs filesystem df ${MOUNTPOINT1}
 
-    echo
-    printTitle "btrfs scrub status ${MOUNTPOINT1}"
-    scrubStatus ${MOUNTPOINT1}
+  #echo
+  #printTitle "btrfs filesystem df ${MOUNTPOINT1}"
+  #btrfs filesystem df ${MOUNTPOINT1}
 
-    #echo
-    #printTitle "btrfs scrub status ${MOUNTPOINT1}"
-    #scrubStatus ${MOUNTPOINT1}
+  echo
+  printTitle "btrfs scrub status ${MOUNTPOINT1}"
+  scrubStatus ${MOUNTPOINT1}
 
-    echo
-    printTitle "btrfs device stats ${MOUNTPOINT1}"
-    deviceStats ${MOUNTPOINT1}
+  #echo
+  #printTitle "btrfs scrub status ${MOUNTPOINT1}"
+  #scrubStatus ${MOUNTPOINT1}
 
-    #echo
-    #printTitle "btrfs device stats ${MOUNTPOINT1}"
-    #deviceStats ${MOUNTPOINT1}
+  echo
+  printTitle "btrfs device stats ${MOUNTPOINT1}"
+  deviceStats ${MOUNTPOINT1}
 
-    echo
-    printTitle "btrfs balance status ${MOUNTPOINT1}"
-    balanceStatus ${MOUNTPOINT1}
+  #echo
+  #printTitle "btrfs device stats ${MOUNTPOINT1}"
+  #deviceStats ${MOUNTPOINT1}
 
-    #echo
-    #printTitle "btrfs balance status ${MOUNTPOINT1}"
-    #balanceStatus ${MOUNTPOINT1}
+  echo
+  printTitle "btrfs balance status ${MOUNTPOINT1}"
+  balanceStatus ${MOUNTPOINT1}
 
-    echo
-    btrbkInfo
+  #echo
+  #printTitle "btrfs balance status ${MOUNTPOINT1}"
+  #balanceStatus ${MOUNTPOINT1}
+
+  #echo
+  #btrbkInfo
 }
 
 #---------------------------------------------------------------
 # btrbk
 
 btrbkInfo() {
-    printTitle "btrbk stats"
-    sudo btrbk stats
-    echo
-    printTitle "btrbk usage"
-    btrbk usage
+  printTitle "btrbk stats"
+  sudo btrbk stats
+  echo
+  printTitle "btrbk usage"
+  btrbk usage
 }
 
 #---------------------------------------------------------------
 
 dfInfo() {
-    df -hT | grep btrfs
+  df -hT | grep btrfs
 }
 
 diskInfo() {
-    lsblk -pf
+  lsblk -pf
 
-    echo
-    #dfInfo
-    df -hT | grep btrfs
+  echo
+  #dfInfo
+  df -hT | grep btrfs
 
-    echo
-    mount | grep btrfs
+  echo
+  mount | grep btrfs
 }
 
 scrubStatus() {
-    local MOUNTPOINT="$1"
-    sudo btrfs scrub status $MOUNTPOINT1
+  local MOUNTPOINT="$1"
+  sudo btrfs scrub status $MOUNTPOINT1
 }
 
 deviceStats() {
-    local MOUNTPOINT="$1"
-    sudo btrfs device stats -T $MOUNTPOINT1
+  local MOUNTPOINT="$1"
+  sudo btrfs device stats -T $MOUNTPOINT1
 }
 
 balanceStatus() {
-    local MOUNTPOINT="$1"
-    sudo btrfs balance status $MOUNTPOINT1;
+  local MOUNTPOINT="$1"
+  sudo btrfs balance status $MOUNTPOINT1;
 }
 
 filesystemShow() {
-    #local MOUNTPOINT="$1"
-    sudo btrfs filesystem show --human-readable
+  #local MOUNTPOINT="$1"
+  sudo btrfs filesystem show --human-readable
 }
 
 about(){
-    #echo "$0"
-    echo "Version: 0.0.1"
-    echo "Author: Muhammad Najib Bin Ibrahim"
-    echo "Email: mnajib@gmail.com"
+  #echo "$0"
+  echo "Version: 0.0.1"
+  echo "Author: Muhammad Najib Bin Ibrahim"
+  echo "Email: mnajib@gmail.com"
 }
 
 version(){
-    echo "$0 v0.0.1"
+  echo "$0 v0.0.1"
 }
 
 usage(){
-    echo "Usage: $0 [OPTIONS]"
-    echo "OPTIONS:"
-    echo "  -h, --help        Display this help message."
-    echo "  -v, --version     Display this script version."
-    echo "  -a, --about       Display about this script."
+  echo "Usage: $0 [OPTIONS]"
+  echo "OPTIONS:"
+  echo "  -h, --help        Display this help message."
+  echo "  -v, --version     Display this script version."
+  echo "  -a, --about       Display about this script."
 }
 
 match() {
   case $1 in
-    -h|--help)
-      usage
-      exit 0
-      ;;
-    -v|--version)
-      version
-      exit 0
-      ;;
-    -a|--about)
-      about
-      exit 0
-      ;;
-    *)
-      # without any arguments
-      if [ -z "$1" ]; then #if [ -n "$1"]; then
-        printReportAll
-        #printReportAll | less
-      else #If any other argument(s)
-        echo "Invalid input. Please enter a valid input."
-        exit 1
-      fi
-      # without any arguments
+  -h|--help)
+    usage
+    exit 0
+    ;;
+  -v|--version)
+    version
+    exit 0
+    ;;
+  -a|--about)
+    about
+    exit 0
+    ;;
+  *)
+    # without any arguments
+    if [ -z "$1" ]; then #if [ -n "$1"]; then
       #printReportAll
-      ;;
+      #printReportAll | less
+      echo "Invalid input. Please enter a valid input."
+      echo
+      usage
+      exit 1
+    else #If any other argument(s)
+      #echo "Invalid input. Please enter a valid input."
+      #exit 1
+      printReportAll "$MOUNTPOINT1"
+    fi
+    # without any arguments
+    #printReportAll
+    ;;
   esac
 }
 
 main() {
-    match "$@"
+  match "$@"
 }
 
 #printReportAll
