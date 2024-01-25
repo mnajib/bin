@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+#file openwithnvim
+
+# Usage:
+#   Change Exec line in nvim.desktop from
+#   Exec=nvim %f
+#   to
+#   Exec=openwithnvim %f
+
+# NOTE:
+#   To set nvim as default for empty files:
+#     xdg-mime default inode/x-empty nvim.desktop
+#   To query what is the 'filetype' of the file 'test.txt'
+#     xdg-mime filetype test.txt
+#   To query what is the default file-association for the 'filetype'
+#     xdg-mime query default inode/x-empty
+
+DIR=$(dirname "$1")
+#TERMINAL=
+lxterminal --working-directory=$DIR -e bash -c "nvim \"$1\"; bash"
+#$TERMINAL --working-directory=$DIR -e bash -c "nvim \"$1\"; bash"
+#terminology -d=$DIR -e "nvim \"$1\""

@@ -1,37 +1,105 @@
-#!/run/current-system/sw/bin/env bash
+#!/usr/bin/env bash
+#
+#------------------------------------------------------------------------------
+# NOTE:
+#------------------------------------------------------------------------------
+#   To query what is the 'filetype' of the file 'test.txt'
+#     xdg-mime query filetype test.txt
+#   To query what is the default file-association for the 'filetype'
+#     xdg-mime query default inode/x-empty
+#
+#   To set nvim as default for empty files:
+#     xdg-mime default inode/x-empty nvim.desktop
+#------------------------------------------------------------------------------
 
 # To open
-$ xdg-open SAMPLE.txt
+#   $ xdg-open SAMPLE.txt
 
 # To query file assosiation
-$ xdg-mime query default $(xdg-mime query filetype SAMPLE.txt)
+#   $ xdg-mime query default $(xdg-mime query filetype SAMPLE.txt)
 
-## To change the default file association / default applcation to open the file
-##$ xdg-mime default emacs $(xdg-mime query filetype SAMPLE.txt)
+##To change the default file association / default applcation to open the file
+##  $ xdg-mime default emacs $(xdg-mime query filetype SAMPLE.txt)
 
-To make Thunar the default file-browser, i.e. the default application for opening folders.
-$ xdg-mime default Thunar.desktop inode/directory
+# To make Thunar the default file-browser, i.e. the default application for opening folders.
+#   $ xdg-mime default Thunar.desktop inode/directory
 
-To use xpdf as the default PDF viewer:
-$ xdg-mime default xpdf.desktop application/pdf
+# To set xpdf as the default PDF viewer:
+#   $ xdg-mime default xpdf.desktop application/pdf
 
-This should create an entry
----
-[Default Applications]
-application/pdf=xpdf.desktop
----
-in your local MIME database ~/.config/mimeapps.list.
-Your PDF files should be opened with xpdf now.
+# This should create an entry
+#   ---
+#   [Default Applications]
+#   application/pdf=xpdf.desktop
+#   ---
+# in your local MIME database ~/.config/mimeapps.list.
+# Your PDF files should be opened with xpdf now.
 
-For some reason xdg-mime did not modify defaults.list, but editing it manually (thanks to hints in this answer) did the trick.
-It seems defaults.list is now called mimeapps.list. See the Arch Wiki for a list of valid locations for mimeapps.list
+# For some reason xdg-mime did not modify defaults.list, but editing it manually (thanks to hints in this answer) did the trick.
+# It seems defaults.list is now called mimeapps.list. See the Arch Wiki for a list of valid locations for mimeapps.list
 
-I found my local MIME database in ~/.config/mimeapps.list
+# I found my local MIME database in ~/.config/mimeapps.list
 
-To query the current default, 
-use xdg-mime query default application/pdf
+# To query the current default, use
+#   xdg-mime query default application/pdf
 
-to figure out mimetype of a certain file run 
-xdg-mime query filetype pathTofileYourInterestedIn
+# To figure out mimetype of a certain file run
+#   xdg-mime query filetype pathTofileYourInterestedIn
 
-update-mime-database
+# update-mime-database
+
+#
+#
+#                                                                         File:
+#                                                                    myfilename.myext
+#                                                                           |
+#                                                                           |
+#                    To get what is the mimetype of file myfilename.myext:  |
+#                                       xdg-mime filetype myfilename.myext  |
+#                                                                           |
+#                                                                           V
+#
+#                                                               File (MIME) type/group?:
+#                                                                   application/pdf
+#
+#                                                                           |
+#                                                                           |
+#                                                                           |
+#                                                                           |
+#                                    [MIME database]                        |
+#                                 ~/.config/mimeapps.list                   |
+#                                                                           |
+#                                            ^                              |
+#                                         |  |                              |
+#                                         |  |                              |
+# xdg-mime query default application/pdf  |  |                             /
+#                                         |  \-----------------------------  xdg-mime default org.gnome.Evince.desktop application/pdf
+#                                         |                                \
+#                                         |                                 |
+#                                         \-----------------------------\   |
+#                                                                        |  |
+#                                                                        |  |
+#                                                                        V  |
+#
+#                                                             Application type/group?:
+#                                                             org.gnome.Evince.desktop
+#
+#                                                                           ^
+#                                                                           |
+#                                                                           |  xdg-mime install --mode system MyApp-MyFileType.xml
+#                                                                           |
+#                                                                           |
+#
+#                                                                 MyApp-MyFileType.xml
+#
+#                                                                           ^
+#                                                                           |
+#                                               touch MyApp-MyFileType.xml  |
+#                                                 vim MyApp-MyFileType.xml  |
+#                                                                           |
+#                                                                           |
+#
+#                                                                      Application:
+#                                                                      libreoffice
+#
+#
