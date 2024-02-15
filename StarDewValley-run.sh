@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 #USER=naim
+OLDUSER="nurnasuha"
 PATH1=~/.wine/drive_c
 PATH2=${PATH1}/MyPrograms/Stardew.Valley.v1.5.4
 PATH3=${PATH1}/users/${USER}/Application\ Data/StardewValley
@@ -35,7 +36,8 @@ esac
 
 #cd ~/.wine/drive_c/users/nurnasuha/AppData/StardewValley
 #cat ~/.wine/drive_c/MyPrograms/Stardew.Valley.v1.5.4/config/startup_preferences > startup_preferences
-cat ~/.wine/drive_c/MyPrograms/Stardew.Valley.v1.5.4/config/startup_preferences > ~/.wine/drive_c/users/${USER}/AppData/Roaming/StardewValley/startup_preferences
+#cat ~/.wine/drive_c/MyPrograms/Stardew.Valley.v1.5.4/config/startup_preferences > ~/.wine/drive_c/users/${USER}/AppData/Roaming/StardewValley/startup_preferences
+cat ~/.wine/drive_c/MyPrograms/Stardew.Valley.v1.5.4/config/startup_preferences > ~/.wine/drive_c/users/${OLDUSER}/AppData/Roaming/StardewValley/startup_preferences
 
 # Start the game
 cd ~/.wine/drive_c/MyPrograms/Stardew.Valley.v1.5.4/Stardew\ Valley/
