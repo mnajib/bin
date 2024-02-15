@@ -11,8 +11,23 @@ PATH5=${PATH2}/Stardew\ Valley
 # Thinkpad X220 sakinah: 1366x768
 #Xephyr -br -ac -noreset -screen 1080x768 :1 &
 #Xephyr -br -ac -noreset -screen 1280x960 :1 &
-#Xephyr -br -ac -noreset -screen 1366x740 :1 &  # sakinah
-Xephyr -br -ac -noreset -screen 1278x750 :1 &   # zahrah
+case "$HOSTNAME" in
+  "sakinah")
+    xXephyr -br -ac -noreset -screen 1366x740 :1 &          # sakinah, thinkpad x220, 1336x768
+    ;;
+  "zahrah")
+    Xephyr -br -ac -noreset -screen 1278x750 :1 &           # zahrah
+    ;;
+  "keira")
+    #Xephyr -br -ac -noreset -screen 1440x872 :1 &          # keira, thinkpad t410, 1440x900
+    Xephyr -br -ac -noreset -screen 1280x996 :1 &           # external monitor, 1280x1024
+    ;;
+  *)
+    #Xephyr -br -ac -noreset -screen 1024x740 :1 &          # 1024x768
+    #Xephyr -br -ac -noreset -screen 1024x768 :1 &          # 1024x768
+    Xephyr -br -ac -noreset -screen 640x480 :1 &            #
+    ;;
+esac
 
 # Reset StardewValley custom resolution
 #cd ~/.wine/drive_c/users/nurnasuha/Application\ Data/StardewValley
