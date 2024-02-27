@@ -43,11 +43,13 @@ setFgBrightness()
 increaseFgBrightness()
 {
     # increase by 0.1
+    echo "..."
 }
 
 decreaseFgBrightness()
 {
     # decrease by 0.1
+    echo "..."
 }
 
 toggleFgBrightness()
@@ -57,7 +59,7 @@ toggleFgBrightness()
     local $BRIGHTNESS2=0.7
 
     #if brightness >= 1.0
-    	# change brightness to 0.7
+      # change brightness to 0.7
     #else if brightness <= 0.7
         # change brightness to 1.0
     #else
@@ -71,9 +73,16 @@ toggleFgBrightness()
 
 # Set new background (backlight?) brightness
 #echo 4437  > /sys/class/backlight/intel_backlight/brightness # default
-#echo 1000  > /sys/class/backlight/intel_backlight/brightness # less bright
+#
+# This look nice on Thinkpad X220 sakinah
+#sakinah)
+#echo 1500  > /sys/class/backlight/intel_backlight/brightness # less bright
+#
 #echo 500  > /sys/class/backlight/intel_backlight/brightness # less bright
+#
+# This is suit Thinkpad X230?
 echo 100  > /sys/class/backlight/intel_backlight/brightness # less bright
+#
 #echo 80  > /sys/class/backlight/intel_backlight/brightness # less bright
 
 # nix-env -iA nixos.brightnessctl
