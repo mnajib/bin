@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 
 #USER=naim
-PATH1=~/.wine/drive_c
-PATH2=${PATH1}/MyPrograms/Stardew.Valley.v1.5.4
-PATH3=${PATH1}/users/${USER}/Application\ Data/StardewValley
-PATH4=${PATH1}/users/${USER}/AppData/StardewValley
-PATH5=${PATH2}/Stardew\ Valley
+PATH1="~/.wine/drive_c"
+
+PATH2="${PATH1}/MyPrograms/Stardew.Valley"
+
+PATH3="${PATH1}/users/${USER}/Application\ Data/StardewValley"
+PATH4="${PATH1}/users/${USER}/AppData/StardewValley"
+#PATH5=${PATH2}/Stardew\ Valley
+EXE='Stardew Valley.exe'
 
 # Ready custom nested display
 # Thinkpad X220 sakinah: 1366x768
@@ -24,7 +27,8 @@ Xephyr -br -ac -noreset -screen 1280x1024 :1 &
 cat ~/.wine/drive_c/MyPrograms/Stardew.Valley.v1.5.4/config/startup_preferences > ~/.wine/drive_c/users/${USER}/AppData/Roaming/StardewValley/startup_preferences
 
 # Start the game
-cd ~/.wine/drive_c/MyPrograms/Stardew.Valley.v1.5.4/Stardew\ Valley/
+#cd ~/.wine/drive_c/MyPrograms/Stardew.Valley.v1.5.4/Stardew\ Valley/
+cd ~/.wine/drive_c/MyPrograms/Stardew.Valley/Stardew\ Valley/
 #DISPLAY=:1 wine ./Stardew\ Valley.exe
 #DISPLAY=:1 wine ${PATH5}/Stardew\ Valley.exe
 #cd ${PATH5}

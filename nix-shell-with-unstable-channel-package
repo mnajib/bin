@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+#
+# Usage example:
+#   $0 mindustry --command mindustry
+#   $0 tmux git neovim
+#
+# Usage example for older:
+#   $0 mindustry --run mindustry
+#
+
+#------------------------------------------------------------------------------
+# Using 'nix-shell'
+#------------------------------------------------------------------------------
+function older {
+  local therest
+  therest="$1"
+  #nix-shell -p mindustry glew -I nixpkgs=channel:nixos-unstable
+  #mindustry
+  #nix-shell -I nixpkgs=channel:nixos-unstable -p "$@"
+  nix-shell -I nixpkgs=channel:nixos-unstable -p "$therest"
+}
+
+#------------------------------------------------------------------------------
+# Using 'nix shell'
+#------------------------------------------------------------------------------
+function newer {
+  local therest
+  therest="$1"
+  #nix shell nixpkgs#mindustry
+  #nix shell 'nixpkgs/nixos-unstable#mindustry'
+  #nix shell 'nixpkgs/nixos-unstable#mindustry --command mindustry
+  #nix shell nixpkgs/nixos-unstable#mindustry --command sh -c "cd ~/ && mindustry"
+  #nix shell "nixpkgs/nixos-unstable#${@}"
+  nix shell "nixpkgs/nixos-unstable#${therest}"
+}
+
+#older "$@"
+newer "$@"

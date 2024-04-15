@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
-programName=$1
-pgrep -a $programName | awk '{print $1}' | xargs kill
+programName="$1"
+#pgrep -a $programName | awk '{print $1}' | xargs kill
+pgrep -i -a "${programName}" | awk '{print $1}' | xargs kill -9

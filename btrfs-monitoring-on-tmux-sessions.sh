@@ -20,10 +20,10 @@ monitorInTmuxPane() {
     #    split-pane 'watch btrfs scrub status /mnt/btr_pool2' \; \
     #    split-window 'watch btrfs device stats -T /mnt/btr_pool1' \; \
     #    split-window 'watch btrfs device stats -T /mnt/btr_pool1'
-    
+
     tmux split-pane "watch scrubStatus $MOUNTPOINT" \; \
         select-layout even-vertical
-    
+
     #tmux select-layout even-vertical
     #tmux select-layout even-horizontal
 }
@@ -37,10 +37,10 @@ printTitle(){
 }
 
 printReportAll() {
-    printTitle "btrfs filesystem show" 
+    printTitle "btrfs filesystem show"
     filesystemShow
     echo
-    printTitle "btrfs scrub status /mnt/btr_pool1" 
+    printTitle "btrfs scrub status /mnt/btr_pool1"
     scrubStatus /mnt/btr_pool1
     echo
     printTitle "btrfs scrub status /mnt/btr_pool2"
@@ -52,7 +52,7 @@ printReportAll() {
     printTitle "btrfs device stats /mnt/btr_pool2"
     deviceStats /mnt/btr_pool2
     echo
-    printTitle "btrfs balance status /mnt/btr_pool1" 
+    printTitle "btrfs balance status /mnt/btr_pool1"
     balanceStatus /mnt/btr_pool1
     echo
     printTitle "btrfs balance status /mnt/btr_pool2"
@@ -71,7 +71,7 @@ deviceStats() {
 
 balanceStatus() {
     local MOUNTPOINT="$1"
-    btrfs balance status $MOUNTPOINT; 
+    btrfs balance status $MOUNTPOINT;
 }
 
 filesystemShow() {

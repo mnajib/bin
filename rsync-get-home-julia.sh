@@ -1,5 +1,11 @@
-#!/usr/env bash
+#!/usr/bin/env bash
 
-rsync -az --exclude=.cache --exclude=.snapshots julia@keira:/home/julia/ /home/julia
+SRC='julia@keira:/home/julia/'
+DES='/home/julia'
+
+#rsync -az --exclude=.cache --exclude=.snapshots julia@keira:/home/julia/ /home/julia
+#rsync -az --exclude=.cache --exclude=.snapshots $SRC $DES
+#rsync -azP --exclude=.cache --exclude=.snapshots $SRC $DES
+rsync -vazP --progress --exclude=.cache --exclude=.snapshots $SRC $DES
 
 #rm -Rf /home/julia/.cache /home/julia/.snapshots
