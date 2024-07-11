@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 SRC='julia@keira:/home/julia/'
-DES='/home/julia'
+#DES='/home/julia'
+DES='/mnt/data/julia'
 
 #rsync -az --exclude=.cache --exclude=.snapshots julia@keira:/home/julia/ /home/julia
 #rsync -az --exclude=.cache --exclude=.snapshots $SRC $DES
