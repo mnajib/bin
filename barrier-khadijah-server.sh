@@ -1,3 +1,6 @@
 #!/usr/bin/env bash
 
-barriers --no-daemon --name khadijah --restart --disable-crypto --config barriers-khadijah.conf
+file="$HOME/barrier-khadijah.conf"
+server=khadijah
+
+barriers --no-daemon --name $server --restart --disable-crypto --config $file
