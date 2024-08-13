@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 #tmux new-session -d -s foo 'exec pfoo'
 #tmux send-keys 'bundle exec thin start' 'C-m'
@@ -10,6 +10,19 @@
 #tmux send-keys 'rake ts:start' 'C-m'
 #tmux split-window -v -t 1 'exec pfoo'
 #tmux -2 attach-session -t foo
+
+createNewSession() {
+  SESSIONNAME="script"
+  tmux has-session -t $SESSIONNAME &> /dev/null
+
+  if [ $? != 0 ]
+   then
+      tmux new-session -s $SESSIONNAME -n script -d
+      #tmux send-keys -t $SESSIONNAME "~/bin/script" C-m
+  fi
+
+  tmux attach -t $SESSIONNAME
+}
 
 # at vnet
 
