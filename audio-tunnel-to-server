@@ -1,1 +1,12 @@
-pactl load-module module-tunnel-sink server=tcp:192.168.0.28:4656
+#!/usr/bin/env bash
+
+#
+# Usage:
+#   audio-tunnel-to-server <server_ip_address>
+#   audio-tunnel-to-server 192.168.0.28
+#
+
+SVRIP=$1
+
+#pactl load-module module-tunnel-sink server=tcp:192.168.0.28:4656
+pactl load-module module-tunnel-sink server=tcp:${SVRIP}:4656
