@@ -2,7 +2,7 @@
 
 # Function to print colors in columns
 print_colors() {
-    echo -e "\n--- Standard Colors ---\n"
+    echo -e "\n---Standard Background Colors-----------------------------------------------------------------------------------------------------------------"
 
     # Define the number of columns
     local columns=8
@@ -13,7 +13,7 @@ print_colors() {
         # Loop through standard background colors (0-7)
         for bg in {40..47}; do
             # Print the colored text
-            printf "\033[${fg};${bg}m Fg: ${fg} Bg: ${bg} \033[0m  "
+            printf "\033[${fg};${bg}m Fg: ${fg} Bg:  ${bg} \033[0m  "
             ((count++))
             # Check if we reached the column limit
             if (( count % columns == 0 )); then
@@ -24,7 +24,7 @@ print_colors() {
 
     #--------------------------------------------------------------------------
     # Print a separator for clarity
-    echo -e "\n--- Bright Colors ---\n"
+    echo -e "\n---Bright Background Colors-------------------------------------------------------------------------------------------------------------------"
 
     local columns=8
     count=0  # Reset count for bright colors
