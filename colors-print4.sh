@@ -37,6 +37,7 @@ data2=(
 # Function to print all data in tabular format
 printData() {
     #echo "Index | Name1 | Name2"
+    printf "%-35s\n" "--------------------------------------------"
     printf "%-14s | %-7s | %-7s | %-7s\n" "Color Name" "Hex" "ANSI Fg" "ANSI Bg"
     printf "%-14s | %-7s | %-7s | %-7s\n" "--------------" "-------" "-------" "-------"
 
