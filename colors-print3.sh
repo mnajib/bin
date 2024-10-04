@@ -48,6 +48,9 @@ print_colors() {
         # Column-2: Print bold bright foreground colors, with white background
         printf "\033[${fg2};${bg2};1m%-${w}s\033[0m" "Fg2: ${fg2}"  # Bright foreground color
 
+        # Hexadecimal Codes
+        printf "\033[${fg1};m%-${w}s\033[0m" "${hex[1]}"  # Bright foreground color
+
         ((fg1++))
         ((fg2++))
         ((count++))
