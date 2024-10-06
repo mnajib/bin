@@ -47,9 +47,9 @@ data2=(
 # Function to print all data in tabular format
 printData() {
     #echo "Index | Name1 | Name2"
-    printf "%-35s\n" "--------------------------------------------"
-    printf "%-14s | %-7s | %-7s | %-7s\n" "Color Name" "Hex" "ANSI Fg" "ANSI Bg"
-    printf "%-14s | %-7s | %-7s | %-7s\n" "--------------" "-------" "-------" "-------"
+    printf "%-35s\n" "----------------------------------------------"
+    printf "%-14s | %-9s | %-7s | %-7s\n" "Color Name" "Hex" "ANSI Fg" "ANSI Bg"
+    printf "%-14s | %-9s | %-7s | %-7s\n" "--------------" "---------" "-------" "-------"
 
     for n in {0..15}; do
         # Access the row using the index
@@ -59,7 +59,7 @@ printData() {
         IFS=',' read -r index name hex ansifg ansibg <<< "$row"
 
         c="\033[${ansibg}m \033[0m"
-        printf "%-14s | %-7s | %-7s | %-7s ${c}\n" "$name" "$hex" "$ansifg" "$ansibg"
+        printf "%-14s | %-9s | %-7s | %-5s ${c}\n" "$name" "$hex" "$ansifg" "$ansibg"
 
     done
 }
