@@ -59,7 +59,8 @@ printData() {
         IFS=',' read -r index name hex ansifg ansibg <<< "$row"
 
         c="\033[${ansibg}m \033[0m"
-        printf "%-14s | %-9s | %-7s | %-5s ${c}\n" "$name" "$hex" "$ansifg" "$ansibg"
+        d="\033[${ansifg}m${ansifg}\033[0m"
+        printf "%-14s | %-9s | %-4s ${d} | %-5s ${c}\n" "$name" "$hex" "$ansifg" "$ansibg"
 
     done
 }
