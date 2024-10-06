@@ -60,7 +60,10 @@ printData() {
 
         c="\033[${ansibg}m \033[0m"
         d="\033[${ansifg}m${ansifg}\033[0m"
-        printf "%-14s | %-9s | %-4s ${d} | %-5s ${c}\n" "$name" "$hex" "$ansifg" "$ansibg"
+        #e="\033[${ansibg}m \033[0m"
+        #e="\033[${ansibg}m \033[0m" # XXX: This is not the real hex colors!!!
+        e="" # XXX: This is not the real hex colors!!!
+        printf "%-14s | %-8s ${e} | %-4s ${d} | %-5s ${c}\n" "$name" "$hex" "$ansifg" "$ansibg"
 
     done
 }
