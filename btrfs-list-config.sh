@@ -15,98 +15,150 @@
 #  echo "Device ID: $DEVICE"
 #  echo
 #done
+DEVICES=()
+DEVICES=$(sudo btrfs filesystem show | grep "devid" | awk '{print $8}')
+readonly DEVICES # make the variable readonly
+#DEVICES=$(df -hT | grep 'btrfs' | awk '{print $1}' | sort -n | uniq)
+#declare -A MPOINT # Declare an array
+MPOINT=()
+for DEVICE in $DEVICES; do
+    #MPOINT[$DEVICE]=$(df -hT | grep 'btrfs' | awk '{print $1 " " $7}' | grep $DEVICE | awk '{print $2}' | uniq | head -1)
+    MPOINT+=$(df -hT | grep 'btrfs' | awk '{print $1 " " $7}' | grep $DEVICE | awk '{print $2}' | uniq | head -1)
+done
+
 
 # Show a list of partition/disk (uuid), match with device name
 # uuid:xxx ---> /dev/mapper/vg1-lvroot1
+showAllBtrfsFilesystems() {
     echo
     echo "---------------------------------------"
     echo " btrfs filesystem show"
     echo "---------------------------------------"
     echo
-btrfs filesystem show
+    sudo btrfs filesystem show
+}
+showAllBtrfsFilesystems
 
-DEVICES=$(btrfs filesystem show | grep "devid" | awk '{print $8}')
-#DEVICES=$(df -hT | grep 'btrfs' | awk '{print $1}' | sort -n | uniq)
+showDeviceStatistic() {
+  local devices="$1"
+  for device in $devices; do
+      echo
+      echo "---------------------------------------"
+      echo " btrfs device stats $device"
+      echo "---------------------------------------"
+      echo
+      btrfs device stats $device
+  done
+}
+showDeviceStatistic "$DEVICES"
 
-for DEVICE in $DEVICES; do
+showMounted() {
+  local devices="$1"
+  for device in $devices; do
     echo
     echo "---------------------------------------"
-    echo " btrfs device stats $DEVICE"
+    echo " df -hT | grep $device"
     echo "---------------------------------------"
     echo
-    btrfs device stats $DEVICE
-done
+    df -hT | grep 'btrfs' | awk '{print $1 " " $7}' | uniq | grep "$device" | awk '{print "  " $2}'
+    #mount_point=$(df -hT | grep 'btrfs' | awk '{print $1 " " $7}' | uniq | grep $device | awk '{print "  " $2}')
+    #printf "%s --> %s" "$device" "$mount_point"
+  done
+}
+showMounted "$DEVICES"
 
-for DEVICE in $DEVICES; do
-    echo
-    echo "---------------------------------------"
-    echo " df -hT | grep $DEVICE"
-    echo "---------------------------------------"
-    echo
-    df -hT | grep 'btrfs' | awk '{print $1 " " $7}' | uniq | grep $DEVICE | awk '{print "  " $2}'
-done
+showFsUsageAndAlloc() {
+  #local DEVICE=$1
+  #local MOUNT_POINT=$2
+  local $devices=$1
 
-for DEVICE in $DEVICES; do
-    #echo
-    #echo "---------------------------------------"
-    #echo " df -hT | grep $DEVICE | awk ''"
-    #echo "---------------------------------------"
-    #echo
-    THEPATH=$(df -hT | grep 'btrfs' | awk '{print $1 " " $7}' | uniq | grep $DEVICE | awk '{print $2}' | head -1)
-    #echo "$THEPATH"
-    #/home/julia/bin/btrfs-status.sh "$THEPATH"
-
-    #MOUNT_POINT="$1"
-    MOUNT_POINT="$THEPATH"
-    
+  for device in $devices; do
     # Display file system usage and allocation info
     echo
     echo '/---------------------------------------\'
-    #echo ' File System Usage and Allocation:       '
-    echo " btrfs filesystem df $MOUNT_POINT"
+    echo ' File System Usage and Allocation:       '
+    echo " DEVICE=${device}"
+    echo " MOUNT_POINT=${mount_point}"
+    echo " btrfs filesystem df $mount_point"
     echo '\---------------------------------------/'
     echo
-    btrfs filesystem df "$MOUNT_POINT"
-    
+    btrfs filesystem df "$mount_point"
+  done
+}
+#showFsUsageAndAlloc $DEVICES $MOUNT_POINT
+#showFsUsageAndAlloc $DEVICES
+
+getMountpointOfDevice() {
+  local device="$1"
+  local mount_point=$(df -hT | grep 'btrfs' | awk '{print $1 " " $7}' | uniq | grep $device | awk '{print "  " $2}' | head -1 )
+  echo "$mount_point"
+}
+#getMountpointOfDevice $DEVICE
+
+getMountpointOfDevices() {
+  local devices="$1"
+  for device in $devices; do
+    echo
+    echo "---------------------------------------"
+    echo " df -hT | grep $device"
+    echo "---------------------------------------"
+    echo
+    df -hT | grep 'btrfs' | awk '{print $1 " " $7}' | uniq | grep "$device" | awk '{print "  " $2}'
+    #mount_point=$(df -hT | grep 'btrfs' | awk '{print $1 " " $7}' | uniq | grep $device | awk '{print "  " $2}')
+    #printf "%s --> %s" "$device" "$mount_point"
+  done
+}
+#getMountPoint $DEVICES
+
+test() {
     echo
     echo '/---------------------------------------\'
     #echo " File System Usage:"
+    echo " DEVICE=${DEVICE}"
+    echo " MOUNT_POINT=${MOUNT_POINT}"
     echo " btrfs filesystem usage $MOUNT_POINT"
     echo '\---------------------------------------/'
     echo
     btrfs filesystem usage "$MOUNT_POINT"
-    
+
     echo
     echo '/---------------------------------------\'
+    echo " DEVICE=${DEVICE}"
+    echo " MOUNT_POINT=${MOUNT_POINT}"
     echo " btrfs device usage -h $MOUNT_POINT"
     echo '\---------------------------------------/'
     echo
     btrfs device usage -h "$MOUNT_POINT"
-    
+
     # Display scrub status
     echo
     echo '/---------------------------------------\'
     echo " Scrub Status:"
+    echo " DEVICE=${DEVICE}"
+    echo " MOUNT_POINT=${MOUNT_POINT}"
     echo '\---------------------------------------/'
     echo
     btrfs scrub status "$MOUNT_POINT"
-    
+
     # Display balance status
     echo
     echo '/---------------------------------------\'
     echo " Balance Status:"
+    echo " DEVICE=${DEVICE}"
+    echo " MOUNT_POINT=${MOUNT_POINT}"
     echo '\---------------------------------------/'
     echo
     btrfs balance status "$MOUNT_POINT"
-    
+
     # Display device stats
     echo
     echo '/---------------------------------------\'
     echo " Device Stats:"
+    echo " DEVICE=${DEVICE}"
+    echo " MOUNT_POINT=${MOUNT_POINT}"
     echo '\---------------------------------------/'
     echo
     btrfs device stats "$MOUNT_POINT"
 
-done
-
+} #End test()
 
