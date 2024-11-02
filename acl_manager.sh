@@ -37,26 +37,51 @@ get_script_name() {
     echo "$(basename "$0")"
 }
 
+# Maybe Monad Implementation
+maybe() {
+    local value="$1"
+    local if_just="$2"
+    local if_nothing="$3"
+
+    if [[ -n "$value" ]]; then
+        eval "$if_just"
+    else
+        eval "$if_nothing"
+    fi
+}
+
 # Pure Functions
 set_acl() {
     local username="$1"
     local file="$2"
     local permissions="$3"
-    # Set ACL using a command
-    echo "setfacl -m u:$username:$permissions $file"
+    # Check if file exists before setting ACL
+    if [[ -e "$file" ]]; then
+        echo "setfacl -m u:$username:$permissions $file"
+    else
+        echo ""  # Simulating Nothing (failure case)
+    fi
 }
 
 get_acl() {
     local file="$1"
-    # Get ACL command
-    echo "getfacl $file"
+    # Check if file exists before getting ACL
+    if [[ -e "$file" ]]; then
+        echo "getfacl $file"
+    else
+        echo ""  # Simulating Nothing (failure case)
+    fi
 }
 
 remove_acl() {
     local username="$1"
     local file="$2"
-    # Remove ACL command
-    echo "setfacl -x u:$username $file"
+    # Check if file exists before removing ACL
+    if [[ -e "$file" ]]; then
+        echo "setfacl -x u:$username $file"
+    else
+        echo ""  # Simulating Nothing (failure case)
+    fi
 }
 
 # Main Logic
@@ -73,7 +98,9 @@ case "$1" in
             exit 1
         fi
         cmd=$(set_acl "$2" "$3" "$4")
-        print_message "$cmd"  # Here, you can run the command with eval or similar if desired
+        maybe "$cmd" \
+            'print_message "$cmd"' \
+            'print_message "Error: File does not exist or could not set ACL."'
         ;;
     get)
         if [ "$#" -ne 2 ]; then
@@ -82,7 +109,9 @@ case "$1" in
             exit 1
         fi
         cmd=$(get_acl "$2")
-        print_message "$cmd"
+        maybe "$cmd" \
+            'print_message "$cmd"' \
+            'print_message "Error: File does not exist or could not get ACL."'
         ;;
     remove)
         if [ "$#" -ne 3 ]; then
@@ -91,7 +120,9 @@ case "$1" in
             exit 1
         fi
         cmd=$(remove_acl "$2" "$3")
-        print_message "$cmd"
+        maybe "$cmd" \
+            'print_message "$cmd"' \
+            'print_message "Error: File does not exist or could not remove ACL."'
         ;;
     -h|--help)
         show_usage
