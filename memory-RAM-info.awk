@@ -29,7 +29,8 @@ BEGIN {
     next
 }
 
-main && /^[ \t]*Size: .*|^[ \t]*Bank Locator: .*|^[ \t]*Speed: .*/ {
+#main && /^[ \t]*Size: .*|^[ \t]*Bank Locator: .*|^[ \t]*Speed: .*/ {
+main && /^[ \t]*Size: .*|^[ \t]*Bank Locator: .*|^[ \t]*Speed: .*|^[ \t]*Manufacturer: .*|^[ \t]*Part Number: .*/ {
     # Process lines containing memory information
     print
     if ($3 == "GB") {
