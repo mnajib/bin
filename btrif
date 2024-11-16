@@ -43,9 +43,9 @@
 
 DEVICE1=""
 DEVICE2=""
-#MOUNTPOINT1="/mnt/btrbk_pool1"              # "/mnt/btr_pool1"
-MOUNTPOINT1="/mnt/btr_pool1"              # "/mnt/btr_pool1"
-#MOUNTPOINT2="/mnt/btrbk_pool2"              # "/mnt/btr_pool2"
+MOUNTPOINT1="/mnt/btrbk_pool1"       # keira
+#MOUNTPOINT1="/mnt/btr_pool1"          # ...?
+#MOUNTPOINT2="/mnt/btrbk_pool2"       # "/mnt/btr_pool2"
 
 # Start new tmux session
 #...
@@ -147,7 +147,7 @@ dfInfo() {
 }
 
 diskInfo() {
-  lsblk -pf
+  lsblk -pif
 
   echo
   #dfInfo

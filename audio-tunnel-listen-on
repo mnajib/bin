@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+#
+# Usage:
+#  audio-tunnel-listen-on <server_ip_address>
+#  audio-tunnel-listen-on 192.168.0.28
+#
+
+SVRIP=$1
+
+#pactl load-module module-native-protocol-tcp port=4656 listen=192.168.0.28
+pactl load-module module-native-protocol-tcp port=4656 listen=${SVRIP}
