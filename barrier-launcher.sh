@@ -2,7 +2,9 @@
 
 # Function to display help message
 display_help() {
-  echo "Usage: $0 start {server|client} [options]"
+  local script_name=$(basename "$0") # Get the script name without the path
+
+  echo "Usage: $script_name start {server|client} [options]"
   echo
   echo "Commands:"
   echo "  server            Start the Barrier server."
@@ -62,6 +64,19 @@ validate_client_input() {
   return 0 # Indicate success (Just)
 }
 
+# Function to handle optional values (simulating Maybe monad)
+maybe() {
+  local value="$1"
+
+  if [[ -z "$value" ]]; then
+    echo "Error: Expected value, but got None."
+    return 1 # Indicate failure (Nothing)
+  else
+    echo "$value" # Just return the value (Just value)
+    return 0     # Indicate success (Just)
+  fi
+}
+
 # Main function to orchestrate the execution based on command and options
 main() {
   if [[ $# -lt 3 ]]; then
@@ -101,7 +116,9 @@ main() {
 
           validate_server_input "$server_name" "$config_file" || exit 1
 
-          # Start the server in the background
+          # Check if config file exists using Maybe-like handling and run the server in background.
+          maybe "$config_file" || exit 1
+
           run_server "$server_name" "$config_file" &
           ;;
 
@@ -129,7 +146,7 @@ main() {
 
           validate_client_input "$client_name" "$server_name" || exit 1
 
-          # Start the client after a short delay to ensure the server is up (if applicable)
+          # Start the client after a short delay to ensure the server is up (if applicable).
           sleep 2
           run_client "$client_name" "$server_name"
           ;;
@@ -153,6 +170,4 @@ main() {
 
 # Entry point of the script
 main "$@"
-
-
 
