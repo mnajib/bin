@@ -17,6 +17,9 @@ display_help() {
   echo "Options for client:"
   echo "  --client <hostname>        The name of the client."
   echo "  --server <hostname>        The hostname or IP address of the server."
+  echo
+  echo "Example:"
+  echo "   ~/bin/barrier-launcher.sh start server --server khadijah --config-file ~/.config/barrier/barrier-khadijah.conf"
   exit 0
 }
 
