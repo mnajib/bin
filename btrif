@@ -136,7 +136,18 @@ process_mount_point_io() {
 
 # Main function to process and display results (impure)
 get_btrfs_mount_points_with_subvolid5_io() {
-  collect_btrfs_mount_data_io | filter_subvolid5
+  #collect_btrfs_mount_data_io | filter_subvolid5
+  mounts=$(collect_btrfs_mount_data_io | filter_subvolid5)
+
+  if [[ -z "$mounts" ]]; then
+    echo "No Btrfs mount points with subvolid=5 found."
+    return
+  fi
+
+  echo "$mounts" | while read -r mount_point; do
+    #maybe_bind "is_btrfs_mount $mount_point" "process_mount_point_io"
+    maybe_bind "is_btrfs_mount $mount_point" "echo"
+  done
 }
 
 # Use existing function and process its results
@@ -148,8 +159,8 @@ process_all_btrfs_mount_points_with_subvolid5_io() {
   #done
 
   local mounts
-  #mounts=$(collect_btrfs_mount_data_io | filter_subvolid5)
-  mounts=$(get_btrfs_mount_points_with_subvolid5_io)
+  mounts=$(collect_btrfs_mount_data_io | filter_subvolid5)
+  #mounts=$(get_btrfs_mount_points_with_subvolid5_io)
 
   if [[ -z "$mounts" ]]; then
     echo "No Btrfs mount points with subvolid=5 found."
