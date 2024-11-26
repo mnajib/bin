@@ -70,6 +70,105 @@ monitorInTmuxPane() {
   #tmux select-layout even-horizontal
 }
 
+# Represent "Nothing" in the Maybe monad
+nothing() {
+  return 1  # Failure
+}
+
+# Represent "Just" in the Maybe monad
+just() {
+  echo "$1"
+  return 0  # Success
+}
+
+# Bind operation for Maybe monad
+maybe_bind() {
+  local result
+  result="$($1)" || return 1  # Call the function directly and capture the result
+  $2 "$result"                # Pass the result to the second function
+}
+
+# Function to check if a path is a Btrfs mount (simulates Maybe monad)
+is_btrfs_mount() {
+  local path=$1
+
+   # Check if the path exists
+  if [[ ! -e "$path" ]]; then
+    echo "Error: Path '$path' does not exist."
+    nothing
+    return
+  fi
+
+  # Check if the path is a Btrfs mount
+  if findmnt -t btrfs -n --target "$path" > /dev/null 2>&1; then
+    just "$path"
+  else
+    nothing
+  fi
+}
+
+# Collect raw mount point data (impure)
+collect_btrfs_mount_data_io() {
+  findmnt -t btrfs -o TARGET,OPTIONS -rn
+}
+
+# Filter for subvolid=5 (pure-like)
+filter_subvolid5() {
+  while read -r line; do
+    local MOUNT_POINT=$(echo "$line" | awk '{print $1}')
+    local OPTIONS=$(echo "$line" | awk '{print $2}')
+    if echo "$OPTIONS" | grep -q "subvolid=5"; then
+      echo "$MOUNT_POINT"
+    fi
+  done
+}
+
+# Process each mount point (example impure function)
+process_mount_point_io() {
+  local MOUNT_POINT=$1
+  echo "Processing mount point: $MOUNT_POINT"
+
+  # Example: List subvolumes for this mount point
+  echo "Subvolumes under $MOUNT_POINT:"
+  sudo btrfs subvolume list "$MOUNT_POINT"
+  echo
+}
+
+# Main function to process and display results (impure)
+get_btrfs_mount_points_with_subvolid5_io() {
+  collect_btrfs_mount_data_io | filter_subvolid5
+}
+
+# Use existing function and process its results
+process_all_btrfs_mount_points_with_subvolid5_io() {
+  #get_btrfs_mount_points_with_subvolid5_io | while read -r MOUNT_POINT; do
+    #printReportAll "$MOUNT_POINT"
+    #process_mount_point_io "$MOUNT_POINT"
+  #  maybe_bind "is_btrfs_mount $mount_point" "process_mount_point"
+  #done
+
+  local mounts
+  #mounts=$(collect_btrfs_mount_data_io | filter_subvolid5)
+  mounts=$(get_btrfs_mount_points_with_subvolid5_io)
+
+  if [[ -z "$mounts" ]]; then
+    echo "No Btrfs mount points with subvolid=5 found."
+    return
+  fi
+
+  echo "$mounts" | while read -r mount_point; do
+    #maybe_bind "is_btrfs_mount $mount_point" "process_mount_point_io"
+    maybe_bind "is_btrfs_mount $mount_point" "printReportAll"
+  done
+}
+
+# Main function to process and display results (impure)
+#get_btrfs_mount_points_with_subvolid5_and_process_io() {
+#  collect_btrfs_mount_data_io | filter_subvolid5 | while read -r MOUNT_POINT; do
+#    process_mount_point_io "$MOUNT_POINT"
+#  done
+#}
+
 printTitle(){
   local title="$1"
   echo '/##############################################'
@@ -194,6 +293,8 @@ usage(){
   echo "  -h, --help        Display this help message."
   echo "  -v, --version     Display this script version."
   echo "  -a, --about       Display about this script."
+  echo "  -l, --list        Get a list of mount points for btrfs with subvolid=5."
+  echo "  -t, --try         Try to get all info with less user intervention needed."
 }
 
 match() {
@@ -208,6 +309,16 @@ match() {
     ;;
   -a|--about)
     about
+    exit 0
+    ;;
+  -l|--list)
+    echo "Btrfs mount points with subvolid=5:"
+    get_btrfs_mount_points_with_subvolid5_io
+    exit 0
+    ;;
+  -t|--try)
+    echo "Processing each mount point:"
+    process_all_btrfs_mount_points_with_subvolid5_io
     exit 0
     ;;
   *)
