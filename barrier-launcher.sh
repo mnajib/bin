@@ -28,8 +28,13 @@ run_client() {
   local client="$1"   # Client hostname
   local server="$2"   # Server hostname or IP address
 
-  # Execute the Barrier client with specified options
-  barrierc --no-daemon --disable-crypto --restart --name "$client" "$server"
+  if [[ "$client" == "khadijah" ]]; then
+    #export DISPLAY=:1
+    DISPLAY=:1 barrierc --no-daemon --disable-crypto --restart --name "$client" "$server"
+  else
+    # Execute the Barrier client with specified options
+    barrierc --no-daemon --disable-crypto --restart --name "$client" "$server"
+  fi
 }
 
 # Function to run the Barrier server
