@@ -200,8 +200,8 @@ printReportAll() {
   filesystemShow
 
   echo
-  printTitle "btrfs filesystem usage ${MOUNTPOINT1}"
-  btrfs filesystem usage -T ${MOUNTPOINT1}
+  printTitle "sudo btrfs filesystem usage ${MOUNTPOINT1}"
+  sudo btrfs filesystem usage -T ${MOUNTPOINT1}
 
   echo
   printTitle "btrfs filesystem df ${MOUNTPOINT1}"
