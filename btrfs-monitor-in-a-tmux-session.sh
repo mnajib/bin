@@ -1,4 +1,4 @@
-!/usr/bin/env bash
+#!/usr/bin/env bash
 # btrfs-monitor-in-a-tmux-session.sh: Functional-style Btrfs monitoring with Maybe monad
 
 
@@ -7,6 +7,7 @@
 # =============================================
 source ${HOME}/bin/bash_logger.sh
 # Set log level (DEBUG/INFO/WARN/ERROR/FATAL)
+#set_log_level "ERROR"
 set_log_level "WARN"
 #set_log_level "DEBUG"
 
@@ -230,7 +231,7 @@ set_pane_title() {
 # =============================================
 
 # Create summary window with monadic error handling
-create_summary_window() {
+_create_summary_window() {
     local session="$1"
 
     debug "create_summary_window: Begin"
@@ -246,8 +247,108 @@ create_summary_window() {
         "echo 'BTRFS SYSTEM MONITOR - SUMMARY VIEW'" || return
 
     debug "create_summary_window: show btrfs filesystem and device stats"
+    debug "create_summary_window: show btrfs filesystem and device stats for '/'"
     send_tmux_keys "$session" "Summary" \
         "while true; do clear; btrfs filesystem show; echo; btrfs device stats /; sleep 10; done"
+
+    debug "create_summary_window: show btrfs filesystem and device stats for '/boot2': TODO"
+
+    debug "create_summary_window: End"
+}
+#
+__create_summary_window() {
+    local session="$1"
+    shift
+    local mount_points=("$@")
+    local window_index=1 #0 My tmux setting start numbering it from 1, not 0.
+    local window_title="Summary"
+
+    debug "create_summary_window: Begin"
+
+    # Return if no mount points
+    if [[ ${#mount_points[@]} -eq 0 ]]; then
+        warn "No Btrfs mount points found"
+        return 1
+    fi
+
+    debug "create_summary_window: session='${session}', mount_points_count='${#mount_points[@]}', mount_points='${mount_points[*]}', window_index='${window_index}'"
+
+    # Create window with Maybe handling
+    debug "create_summary_window: Creating a new window Summary in session ${session}"
+    window=$(create_tmux_window "$session" "${window_title}") || return
+    debug "create_summary_window: window='${window}' created"
+
+    debug "create_summary_window: run process creating a tmux pane for each mount point'"
+    for mount_point in "${mount_points[@]}"; do
+        [[ -z "$mount_point" ]] && continue
+        debug "create_summary_window: Run process creating a tmux pane for mount_point '${mount_point}'"
+
+        debug "create_summary_window: print header "
+        send_tmux_keys "$session" "$window_title" \
+            "echo 'BTRFS SYSTEM MONITOR - SUMMARY VIEW'" || return
+
+        debug "create_summary_window: show btrfs filesystem and device stats for mount_point='${mount_point}'"
+        send_tmux_keys "$session" "$window_title" \
+            "while true; do clear; btrfs filesystem show; echo; btrfs device stats /; sleep 10; done"
+    done
+
+    debug "create_summary_window: End"
+}
+#
+# Create summary window with mount point information
+create_summary_window() {
+    local session="$1"
+    shift
+    local mount_points=("$@")
+
+    debug "create_summary_window: Begin"
+    debug "Mount points: ${#mount_points[@]} - ${mount_points[*]}"
+
+    # Create window with Maybe handling
+    window=$(create_tmux_window "$session" "Summary") || return
+    debug "create_summary_window: window='${window}' created"
+
+    # Generate summary command
+    local summary_cmd="echo 'BTRFS SYSTEM MONITOR - SUMMARY VIEW'"
+    summary_cmd+="; echo"
+    summary_cmd+="; echo '=== ALL BTRFS FILESYSTEMS (btrfs filesystem show) ==='"
+    summary_cmd+="; echo"
+    summary_cmd+="; btrfs filesystem show"
+
+    # Add per-mount point stats if mount points exist
+    if [[ ${#mount_points[@]} -gt 0 ]]; then
+        summary_cmd+="; echo"
+        summary_cmd+="; echo '=== MOUNT POINT DEVICE STATS (btrfs device stats <mount_point>) ==='"
+
+        for mp in "${mount_points[@]}"; do
+            [[ -z "$mp" ]] && continue
+            summary_cmd+="; echo"
+            summary_cmd+="; echo '---- $mp ----'"
+            debug "create_summary_window: btrfs device stats ${mp}"
+            summary_cmd+="; btrfs device stats $mp"
+        done
+    fi
+
+    # Add per-mount point summary if mount points exist
+    if [[ ${#mount_points[@]} -gt 0 ]]; then
+        summary_cmd+="; echo"
+        summary_cmd+="; echo '=== MOUNT POINT SUMMARY (btrfs filesystem df <mount_point>) ==='"
+
+        for mp in "${mount_points[@]}"; do
+            [[ -z "$mp" ]] && continue
+            summary_cmd+="; echo"
+            summary_cmd+="; echo '---- $mp ----'"
+            debug "create_summary_window: btrfs filesystem df ${mp}"
+            summary_cmd+="; btrfs filesystem df '$mp'"
+        done
+    fi
+
+    # Create refresh command
+    local refresh_cmd="while true; do clear; $summary_cmd; sleep 10; done"
+
+    # Send commands
+    debug "create_summary_window: send_tmux_keys ${session} Summary ${refresh_cmd}"
+    send_tmux_keys "$session" "Summary" "$refresh_cmd" || return
 
     debug "create_summary_window: End"
 }
@@ -388,7 +489,7 @@ configure_tmux_session() {
     tmux set-window-option -t "$session" -g automatic-rename off
 }
 
- =============================================
+# =============================================
 # Main Controller with Monadic Error Handling
 # =============================================
 
@@ -451,14 +552,15 @@ main() {
     # 1. Create tmux window "Summary"
     #--------------------------------------------------------
     # Setup windows with safe composition
-    debug "main: Create tmux window: Summary"
-    create_summary_window "$session_name"
+    debug "main: Create tmux window: Summary, with session_name='$session_name' and mount_points_arr[@]='${mount_points_arr[@]}'"
+    #create_summary_window "$session_name"
+    create_summary_window "$session_name" "${mount_points_arr[@]}"
 
     #--------------------------------------------------------
     # 2. Create tmux window "FS"
     #--------------------------------------------------------
     # Process each mount point
-    debug "main: Create tmux window: FS"
+    debug "main: Create tmux window: FS, with session_name='$session_name' and mount_points_arr[@]='${mount_points_arr[@]}'"
     #while IFS= read -r mount_point; do
     #    [[ -n "$mount_point" ]] || continue
     #    create_filesystem_window "$session_name" "$mount_point"
@@ -470,7 +572,7 @@ main() {
     #--------------------------------------------------------
     # 3. Create tmux window "Log"
     #--------------------------------------------------------
-    debug "main: Create tmux window: Log"
+    debug "main: Create tmux window: Log, with session_name='$session_name'"
     create_log_window "$session_name"
 
 
