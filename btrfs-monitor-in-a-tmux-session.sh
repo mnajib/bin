@@ -7,8 +7,8 @@
 # =============================================
 source ${HOME}/bin/bash_logger.sh
 # Set log level (DEBUG/INFO/WARN/ERROR/FATAL)
-#set_log_level "WARN"
-set_log_level "DEBUG"
+set_log_level "WARN"
+#set_log_level "DEBUG"
 
 # Set log target (default: stderr)
 #  set_log_target "/var/log/myscript.log"
@@ -362,22 +362,20 @@ create_log_window() {
     #send_tmux_keys "$session" "Logs" "journalctl -f | grep -i btrfs"
     set_pane_title "$session" "Logs" "Journal-1"
 
-    window_index=$(echo $window | awk -F[:.] '{print $2}')
-    window_title="Logs"
-    pane_title="Journal-2"
-    debug "create_log_window: Do vertical split. session='$session', window_index='$window', direction='-v', pane_id='1'"
-    if ! create_tmux_pane "$session" "$window_index" "-v" "1"; then
-        error "create_log_window: Failed vertical split on pane in $window_name"
-        continue
-    fi
-    debug "create_log_window: The new pane-2 created at the bottom of pane-1 from spliting pane-1 vertically"
-    pane_index=2
-    #pane_target="${window}"
-    #pane_target="${window_title}.${pane_index}"
-    pane_target="${window_index}.${pane_index}"
-    cmd="journalctl -a -f | grep -i btrfs"
-    send_tmux_keys "$session" "$pane_target" "$cmd" || continue
-    set_pane_title "$session" "$pane_target" "$pane_title"
+    #window_index=$(echo $window | awk -F[:.] '{print $2}')
+    #window_title="Logs"
+    #pane_title="Journal-2"
+    #debug "create_log_window: Do vertical split. session='$session', window_index='$window', direction='-v', pane_id='1'"
+    #if ! create_tmux_pane "$session" "$window_index" "-v" "1"; then
+    #    error "create_log_window: Failed vertical split on pane in $window_name"
+    #    continue
+    #fi
+    #debug "create_log_window: The new pane-2 created at the bottom of pane-1 from spliting pane-1 vertically"
+    #pane_index=2
+    #pane_target="${window_index}.${pane_index}"
+    #cmd="journalctl -a -f | grep -i btrfs"
+    #send_tmux_keys "$session" "$pane_target" "$cmd" || continue
+    #set_pane_title "$session" "$pane_target" "$pane_title"
 }
 
 # Configure tmux session
