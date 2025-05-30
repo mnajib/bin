@@ -4,6 +4,9 @@
 # List primary mount points for each Btrfs filesystem
 # Demonstrates two methods to list first mount point per unique Btrfs device
 #
+# Example usage:
+#   btrfs-primary-mounts.sh | xargs -I{} sudo btrfs scrub start {}
+#
 
 # Method 1: Two-pass awk approach (pipeline version)
 # Pros: Clear separation of concerns, easier debugging
