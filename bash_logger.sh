@@ -1,12 +1,13 @@
 #!/bin/bash
 
-# bash_logger.sh - Pure Function Logging Library for Bash Scripts
+# bash_logger.sh - Enhanced Logging Library with Debug Flag Support
 
 # Log levels: DEBUG < INFO < WARN < ERROR < FATAL
 declare -A LOG_LEVELS=([DEBUG]=0 [INFO]=1 [WARN]=2 [ERROR]=3 [FATAL]=4)
 DEFAULT_LOG_LEVEL="INFO"
 CURRENT_LOG_LEVEL=${LOG_LEVELS[$DEFAULT_LOG_LEVEL]}
 LOG_TARGET=""  # Empty means stderr
+DEBUG_FLAG_ENABLED=false
 
 # Pure function to identify caller script name
 __get_caller_script() {
@@ -58,7 +59,7 @@ log() {
         "$timestamp" "$level" "$source_file" "$msg" >&3
 }
 
-# Public logging functions (pure wrappers)
+# Public logging functions
 debug() { log "DEBUG" "$1"; }
 info()  { log "INFO"  "$1"; }
 warn()  { log "WARN"  "$1"; }
@@ -74,6 +75,24 @@ set_log_level() {
         echo "Invalid log level: $1. Valid levels: ${!LOG_LEVELS[*]}" >&2
         return 1
     fi
+}
+
+# Enable debug mode via command line flag
+enable_debug_mode() {
+    DEBUG_FLAG_ENABLED=true
+    set_log_level "DEBUG"
+    debug "Debug mode enabled via command line flag"
+}
+
+# Check for --debug flag in arguments
+check_debug_flag() {
+    for arg in "$@"; do
+        if [[ "$arg" == "--debug" ]]; then
+            enable_debug_mode
+            return 0
+        fi
+    done
+    return 1
 }
 
 # Set log target (file or 'stderr')

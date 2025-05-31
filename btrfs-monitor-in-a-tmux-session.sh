@@ -7,9 +7,26 @@
 # =============================================
 source ${HOME}/bin/bash_logger.sh
 # Set log level (DEBUG/INFO/WARN/ERROR/FATAL)
-#set_log_level "ERROR"
-set_log_level "WARN"
+# Set default log level (ERROR in your case)
+set_log_level "ERROR"
+#set_log_level "WARN"
 #set_log_level "DEBUG"
+
+# Check for --debug flag BEFORE any logging calls
+check_debug_flag "$@"
+#
+# Handle debug flag by removing it from arguments
+args=()
+for arg in "$@"; do
+    if [[ "$arg" == "--debug" ]]; then
+        # Enable debug mode and log the change
+        set_log_level "DEBUG"
+        debug "Debug mode enabled via command line flag"
+    else
+        # Keep all other arguments
+        args+=("$arg")
+    fi
+done
 
 # Set log target (default: stderr)
 #  set_log_target "/var/log/myscript.log"
@@ -591,6 +608,10 @@ main() {
 }
 
 # Execute main with error handling
-if ! main; then
-    exit 1
+#if ! main; then
+#    exit 1
+#fi
+#
+if ! main "${args[@]}"; then  # Note: use "${args[@]}" instead of "$@"
+  exit 1
 fi
