@@ -1,12 +1,31 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-# bash_logger.sh - Logging Library for Bash Scripts
+# bash_logger.sh - Pure Function Logging Library for Bash Scripts
 
 # Log levels: DEBUG < INFO < WARN < ERROR < FATAL
 declare -A LOG_LEVELS=([DEBUG]=0 [INFO]=1 [WARN]=2 [ERROR]=3 [FATAL]=4)
 DEFAULT_LOG_LEVEL="INFO"
 CURRENT_LOG_LEVEL=${LOG_LEVELS[$DEFAULT_LOG_LEVEL]}
 LOG_TARGET=""  # Empty means stderr
+
+# Pure function to identify caller script name
+__get_caller_script() {
+    local idx=1  # Start at 1 to skip this function's frame
+    while (( idx < ${#BASH_SOURCE[@]} )); do
+        local candidate="${BASH_SOURCE[$idx]}"
+        # Skip frames from the logger script itself
+        [[ "$candidate" == "${BASH_SOURCE[0]}" ]] || {
+            # Extract filename without path
+            local name="${candidate##*/}"
+            # Handle special case when script is sourced
+            [[ "$name" == "bash" || "$name" == "sh" ]] && name="main"
+            printf -v "$1" "%s" "$name"
+            return
+        }
+        ((idx++))
+    done
+    printf -v "$1" "%s" "main"
+}
 
 # Initialize logging system
 __log_init() {
@@ -30,25 +49,16 @@ log() {
     local timestamp
     timestamp=$(date +"%Y-%m-%d %T")
     
-    # Robust caller identification
-    local source_file="main"
-    if [[ ${#BASH_SOURCE[@]} -gt 2 ]]; then
-        # Walk through call stack to find first external script
-        for (( idx=2; idx<${#BASH_SOURCE[@]}; idx++ )); do
-            local candidate="${BASH_SOURCE[$idx]}"
-            if [[ "$candidate" != "${BASH_SOURCE[0]}" ]]; then
-                source_file=$(basename "$candidate")
-                break
-            fi
-        done
-    fi
+    # Pure caller identification
+    local source_file
+    __get_caller_script source_file
 
     # Format: [Time] [Level] [Script] Message
     printf "[%s] [%s] [%s] %s\n" \
         "$timestamp" "$level" "$source_file" "$msg" >&3
 }
 
-# Public logging functions
+# Public logging functions (pure wrappers)
 debug() { log "DEBUG" "$1"; }
 info()  { log "INFO"  "$1"; }
 warn()  { log "WARN"  "$1"; }
