@@ -114,6 +114,8 @@ embed_CSS_directly() {
   )
 } # End embed_CSS_directly() { ... }
 
+#embed_CSS_directly() {
+
 # Generate HTML
 echo "Converting $IFILE to $OFILE..."
 #pandoc ME-TRY-TO-UNDERSTAND-CONFIG.md -o ME-TRY-TO-UNDERSTAND-CONFIG.html --number-sections
