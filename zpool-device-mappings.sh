@@ -2,12 +2,12 @@
 
 ##############################################################################
 # ZPool Device Mapper
-# 
+#
 # Description: Display ZFS pool information with detailed device mappings
 #              including drive paths, by-id paths, and UUIDs.
-# 
+#
 # Usage: ./zpool-device-mappings.sh
-# 
+#
 # Features:
 # - Pure functions for predictable behavior
 # - Comprehensive error handling
@@ -78,7 +78,7 @@ result_success() {
     echo "SUCCESS:$1"
 }
 
-# Create an error result  
+# Create an error result
 # @param $1: Error message
 # @output: ERROR:$1
 result_error() {
@@ -94,7 +94,7 @@ result_is_success() {
 
 # Check if result is error
 # @param $1: Result string
-# @return: 0 if error, 1 if success  
+# @return: 0 if error, 1 if success
 result_is_error() {
     [[ "$1" == ERROR:* ]]
 }
@@ -107,7 +107,7 @@ result_value() {
 }
 
 # Extract error from error result
-# @param $1: Result string  
+# @param $1: Result string
 # @output: Error message
 result_error_msg() {
     echo "${1#ERROR:}"
@@ -120,7 +120,7 @@ result_error_msg() {
 result_bind() {
     local result="$1"
     local func="$2"
-    
+
     if result_is_success "$result"; then
         local value
         value=$(result_value "$result")
@@ -137,9 +137,9 @@ result_bind() {
 try_cmd() {
     local cmd="$1"
     local error_prefix="$2"
-    
+
     log_debug "Executing: $cmd"
-    
+
     # Use eval to properly handle pipes and redirections in the command string
     if output=$(eval "$cmd" 2>&1); then
         result_success "$output"
@@ -157,7 +157,7 @@ try_cmd() {
 #
 # Usage: get_drive_mappings
 #
-# Output: 
+# Output:
 #   Success: Multiline string with format "by_id_path device_path"
 #   Error: Error message
 #
@@ -174,7 +174,7 @@ get_drive_mappings() {
 # Usage: get_scsi_mappings
 #
 # Output:
-#   Success: Multiline string with format "scsi_id device_path" 
+#   Success: Multiline string with format "scsi_id device_path"
 #   Error: Error message
 #
 # Example output:
@@ -185,7 +185,7 @@ get_scsi_mappings() {
         result_success ""  # lsscsi not available is not an error
         return
     fi
-    
+
     local cmd="lsscsi -g 2>/dev/null | awk '/disk.*ATA/ {gsub(/\\[|\\]/,\"\"); print \$1 \" \" \$(NF-1)}'"
     try_cmd "$cmd" "Failed to get SCSI mappings"
 }
@@ -206,27 +206,27 @@ get_zpool_devices() {
         result_error "zpool command not available"
         return
     fi
-    
+
     # Get raw zpool status output
     local cmd="zpool status"
     local result
     result=$(try_cmd "$cmd" "Failed to get zpool status")
-    
+
     if result_is_error "$result"; then
         echo "$result"
         return
     fi
-    
+
     local zpool_output
     zpool_output=$(result_value "$result")
-    
+
     log_debug "ZPool status output lines: $(echo "$zpool_output" | wc -l)"
-    
+
     # SIMPLE APPROACH: Extract pool names and devices using grep and basic parsing
     local parsed_devices=""
     local current_pool=""
     local current_vdev="-"
-    
+
     while IFS= read -r line; do
         # Extract pool name
         if [[ "$line" =~ ^[[:space:]]*pool:[[:space:]]+([^[:space:]]+) ]]; then
@@ -235,14 +235,14 @@ get_zpool_devices() {
             log_debug "Found pool: $current_pool"
             continue
         fi
-        
+
         # Extract vdev name (raidz, mirror, etc.)
         if [[ "$line" =~ ^[[:space:]]+(raidz[0-9]*-[0-9]+|mirror-[0-9]+|spare|log|cache|special)[[:space:]]+ ]]; then
             current_vdev="${BASH_REMATCH[1]}"
             log_debug "Found vdev: $current_vdev"
             continue
         fi
-        
+
         # Extract device lines (lines containing ata- and ONLINE)
         if [[ "$line" =~ ^[[:space:]]+(ata-[^[:space:]]+)[[:space:]]+ONLINE ]]; then
             local device_id="${BASH_REMATCH[1]}"
@@ -252,7 +252,7 @@ get_zpool_devices() {
             fi
             continue
         fi
-        
+
         # For Riyadh pool which has direct devices without vdev
         if [[ "$line" =~ ^[[:space:]]+(ata-[^[:space:]]+-part[0-9]+)[[:space:]]+ONLINE ]] && [[ "$current_pool" == "Riyadh" ]]; then
             local device_id="${BASH_REMATCH[1]}"
@@ -262,12 +262,12 @@ get_zpool_devices() {
             fi
             continue
         fi
-        
+
     done <<< "$zpool_output"
-    
+
     # Remove trailing newline and trim
     parsed_devices=$(echo "$parsed_devices" | sed '/^[[:space:]]*$/d')
-    
+
     log_debug "Parsed devices count: $(echo "$parsed_devices" | wc -l)"
     if [[ -n "$parsed_devices" ]]; then
         log_debug "Parsed devices:"
@@ -277,7 +277,7 @@ get_zpool_devices() {
     else
         log_debug "No devices parsed from zpool status"
     fi
-    
+
     if [[ -z "$parsed_devices" ]]; then
         result_error "No devices found in zpool status output"
     else
@@ -299,16 +299,16 @@ get_zpool_devices() {
 get_uuid_for_device() {
     local device_id="$1"
     local device_path="/dev/disk/by-id/$device_id"
-    
+
     log_debug "Looking up UUID for device: $device_id"
-    
+
     # Check if device exists
     if [[ ! -L "$device_path" ]]; then
         log_debug "Device path not found: $device_path"
         result_success "unknown"
         return
     fi
-    
+
     # Get real device path
     local real_device
     if ! real_device=$(readlink -f "$device_path" 2>/dev/null); then
@@ -316,9 +316,9 @@ get_uuid_for_device() {
         result_success "unknown"
         return
     fi
-    
+
     log_debug "Resolved device: $device_path -> $real_device"
-    
+
     # Search for UUID in by-uuid directory
     local uuid_found="unknown"
     if [[ -d "/dev/disk/by-uuid" ]]; then
@@ -337,7 +337,7 @@ get_uuid_for_device() {
     else
         log_debug "/dev/disk/by-uuid directory not found"
     fi
-    
+
     # If UUID is still unknown, try using blkid as fallback
     if [[ "$uuid_found" == "unknown" ]] && command -v blkid &> /dev/null; then
         log_debug "Trying blkid fallback for: $real_device"
@@ -349,7 +349,7 @@ get_uuid_for_device() {
             fi
         fi
     fi
-    
+
     result_success "$uuid_found"
 }
 
@@ -367,7 +367,7 @@ get_uuid_for_device() {
 #   Error: Error message
 build_drive_mapping_table() {
     log_verbose "Building drive mapping table..."
-    
+
     # Get ATA mappings
     local ata_result
     ata_result=$(get_drive_mappings)
@@ -377,38 +377,38 @@ build_drive_mapping_table() {
         log_info "Trying alternative ATA mapping approach..."
         ata_result=$(result_success "$(process_ata_mappings_directly)")
     fi
-    
-    # Get SCSI mappings  
+
+    # Get SCSI mappings
     local scsi_result
     scsi_result=$(get_scsi_mappings)
     if result_is_error "$scsi_result"; then
         log_warn "SCSI mappings unavailable: $(result_error_msg "$scsi_result")"
         scsi_result=$(result_success "")
     fi
-    
+
     # Process ATA mappings
     local -A drive_map
     local ata_mappings
     ata_mappings=$(result_value "$ata_result")
-    
+
     while IFS=' ' read -r by_id_path device_rel_path; do
         if [[ -n "$by_id_path" && -n "$device_rel_path" ]]; then
             local by_id_base=$(basename "$by_id_path")
             local device_base=$(basename "$device_rel_path")
-            
+
             # Map by-id to device (e.g., ata-... -> sda)
             drive_map["$by_id_base"]="$device_base"
             # Map device to by-id for reverse lookup
             drive_map["$device_base"]="$by_id_base"
-            
+
             log_debug "Mapped: $by_id_base -> $device_base"
         fi
     done <<< "$ata_mappings"
-    
+
     # Process SCSI mappings
     local scsi_mappings
     scsi_mappings=$(result_value "$scsi_result")
-    
+
     while IFS=' ' read -r scsi_id device_path; do
         if [[ -n "$scsi_id" && -n "$device_path" ]]; then
             local dev_name=$(basename "$device_path")
@@ -416,16 +416,16 @@ build_drive_mapping_table() {
             log_debug "Mapped SCSI: $scsi_id -> $dev_name"
         fi
     done <<< "$scsi_mappings"
-    
+
     # Convert associative array to output string
     local mapping_output=""
     for key in "${!drive_map[@]}"; do
         mapping_output+="${key}:${drive_map[$key]}"$'\n'
     done
-    
+
     local mapping_count=$(echo "$mapping_output" | grep -c .)
     log_verbose "Drive mapping table built with $mapping_count entries"
-    
+
     result_success "$mapping_output"
 }
 
@@ -434,7 +434,7 @@ build_drive_mapping_table() {
 process_ata_mappings_directly() {
     log_info "Processing ATA mappings directly..."
     local output=""
-    
+
     # Process each ata device link directly
     for ata_link in /dev/disk/by-id/ata-*; do
         if [[ -L "$ata_link" ]] && [[ "$ata_link" != *"-part"* ]]; then
@@ -447,7 +447,7 @@ process_ata_mappings_directly() {
             fi
         fi
     done
-    
+
     # Sort the output
     echo "$output" | sort
 }
@@ -465,17 +465,17 @@ process_ata_mappings_directly() {
 #   $1: Drive mappings string from build_drive_mapping_table
 format_zpool_output() {
     local drive_mappings="$1"
-    
+
     log_verbose "Formatting zpool output..."
-    
+
     # Parse drive mappings into associative array
     declare -A drive_map
     while IFS=: read -r key value; do
         [[ -n "$key" && -n "$value" ]] && drive_map["$key"]="$value"
     done <<< "$drive_mappings"
-    
+
     log_debug "Drive map size: ${#drive_map[@]} entries"
-    
+
     # Get zpool devices
     local zpool_result
     zpool_result=$(get_zpool_devices)
@@ -484,34 +484,34 @@ format_zpool_output() {
         echo "Error: $(result_error_msg "$zpool_result")" >&2
         return 1
     fi
-    
+
     local zpool_devices
     zpool_devices=$(result_value "$zpool_result")
-    
+
     if [[ -z "$zpool_devices" ]]; then
         log_error "No zpool devices found in parsed output"
         echo "No ZFS pools or devices found in the parsed output." >&2
         return 1
     fi
-    
+
     log_verbose "Displaying zpool device information..."
-    
+
     # Header
     echo "        NAME                                                       DRIVE       ID                      UUID"
     echo ""
-    
+
     local current_pool=""
     local current_vdev=""
     local device_count=0
-    
+
     # Process each zpool device
     while IFS=' ' read -r pool vdev device_id; do
         if [[ -z "$device_id" ]]; then
             continue
         fi
-        
+
         device_count=$((device_count + 1))
-        
+
         # Print pool name header
         if [[ "$pool" != "$current_pool" ]]; then
             [[ -n "$current_pool" ]] && echo ""
@@ -519,31 +519,31 @@ format_zpool_output() {
             current_pool="$pool"
             current_vdev=""
         fi
-        
+
         # Print vdev name header
         if [[ "$vdev" != "$current_vdev" && "$vdev" != "-" ]]; then
             printf "          %-56s\n" "$vdev"
             current_vdev="$vdev"
         fi
-        
+
         # Process device information
         local base_device_id="$device_id"
         local is_partition=""
-        
+
         # Handle partition devices
         if [[ "$device_id" == *"-part"* ]]; then
             base_device_id="${device_id%-part*}"
             is_partition="true"
             log_debug "Processing partition: $device_id (base: $base_device_id)"
         fi
-        
+
         # Resolve device paths
         local drive_path="unknown"
         local full_id_path="/dev/disk/by-id/$device_id"
         local uuid_result
         uuid_result=$(get_uuid_for_device "$device_id")
         local uuid_path="unknown"
-        
+
         if result_is_success "$uuid_result"; then
             local uuid_val
             uuid_val=$(result_value "$uuid_result")
@@ -553,11 +553,11 @@ format_zpool_output() {
                 uuid_path="unknown"
             fi
         fi
-        
+
         # Look up device path from mappings
         if [[ -n "${drive_map[$base_device_id]:-}" ]]; then
             local mapped_value="${drive_map[$base_device_id]}"
-            
+
             # Determine if this is a device name or by-id path
             if [[ "$mapped_value" =~ ^sd[a-z]+$ ]]; then
                 # It's a device name
@@ -583,16 +583,16 @@ format_zpool_output() {
                 log_debug "Direct resolution: $device_id -> $drive_path"
             fi
         fi
-        
+
         # Output device information
         printf "          %-58s %-11s %-23s %s\n" \
             "$device_id" \
             "$drive_path" \
             "$full_id_path" \
             "$uuid_path"
-            
+
     done <<< "$zpool_devices"
-    
+
     log_verbose "Displayed $device_count zpool devices"
 }
 
@@ -606,10 +606,10 @@ format_zpool_output() {
 # Usage: test_zpool_parsing
 test_zpool_parsing() {
     log_test "Testing zpool status parsing..."
-    
+
     local tests_passed=0
     local tests_failed=0
-    
+
     # Sample zpool status output that matches the user's actual output
     local sample_zpool_output="  pool: Garden
  state: ONLINE
@@ -649,12 +649,12 @@ config:
           ata-WDC_WD10SPCX-75KHST0_WXU1AA60XS04-part2                  ONLINE       0     0     0
 
 errors: No known data errors"
-    
+
     # Test the actual parsing function with the sample data
     local parsed_devices=""
     local current_pool=""
     local current_vdev="-"
-    
+
     while IFS= read -r line; do
         # Extract pool name
         if [[ "$line" =~ ^[[:space:]]*pool:[[:space:]]+([^[:space:]]+) ]]; then
@@ -662,13 +662,13 @@ errors: No known data errors"
             current_vdev="-"
             continue
         fi
-        
+
         # Extract vdev name (raidz, mirror, etc.)
         if [[ "$line" =~ ^[[:space:]]+(raidz[0-9]*-[0-9]+|mirror-[0-9]+|spare|log|cache|special)[[:space:]]+ ]]; then
             current_vdev="${BASH_REMATCH[1]}"
             continue
         fi
-        
+
         # Extract device lines (lines containing ata- and ONLINE)
         if [[ "$line" =~ ^[[:space:]]+(ata-[^[:space:]]+)[[:space:]]+ONLINE ]]; then
             local device_id="${BASH_REMATCH[1]}"
@@ -677,7 +677,7 @@ errors: No known data errors"
             fi
             continue
         fi
-        
+
         # For Riyadh pool which has direct devices without vdev
         if [[ "$line" =~ ^[[:space:]]+(ata-[^[:space:]]+-part[0-9]+)[[:space:]]+ONLINE ]] && [[ "$current_pool" == "Riyadh" ]]; then
             local device_id="${BASH_REMATCH[1]}"
@@ -686,12 +686,12 @@ errors: No known data errors"
             fi
             continue
         fi
-        
+
     done <<< "$sample_zpool_output"
-    
+
     # Remove trailing newline and trim
     parsed_devices=$(echo "$parsed_devices" | sed '/^[[:space:]]*$/d')
-    
+
     # Verify we found the correct number of devices
     local device_count=$(echo "$parsed_devices" | wc -l)
     if [[ "$device_count" -eq 7 ]]; then
@@ -705,7 +705,7 @@ errors: No known data errors"
         done
         tests_failed=$((tests_failed + 1))
     fi
-    
+
     log_test "ZPool parsing tests completed: $tests_passed passed, $tests_failed failed"
     return $tests_failed
 }
@@ -716,10 +716,10 @@ errors: No known data errors"
 # Usage: run_internal_tests
 run_internal_tests() {
     log_test "Running internal tests..."
-    
+
     local tests_passed=0
     local tests_failed=0
-    
+
     # Test result utilities
     local test_result
     test_result=$(result_success "test value")
@@ -730,8 +730,8 @@ run_internal_tests() {
         log_test "✗ result_success/test_value failed"
         tests_failed=$((tests_failed + 1))
     fi
-    
-    test_result=$(result_error "test error") 
+
+    test_result=$(result_error "test error")
     if result_is_error "$test_result" && [[ $(result_error_msg "$test_result") == "test error" ]]; then
         log_test "✓ result_error/test_error passed"
         tests_passed=$((tests_passed + 1))
@@ -739,7 +739,7 @@ run_internal_tests() {
         log_test "✗ result_error/test_error failed"
         tests_failed=$((tests_failed + 1))
     fi
-    
+
     # Test monadic bind
     local bind_result
     bind_result=$(result_bind "$(result_success "input")" "result_success")
@@ -750,7 +750,7 @@ run_internal_tests() {
         log_test "✗ result_bind/success failed"
         tests_failed=$((tests_failed + 1))
     fi
-    
+
     # Test command execution
     local cmd_result
     cmd_result=$(try_cmd "echo 'test'" "Test command")
@@ -761,7 +761,7 @@ run_internal_tests() {
         log_test "✗ try_cmd/echo failed"
         tests_failed=$((tests_failed + 1))
     fi
-    
+
     # Run zpool parsing tests
     if test_zpool_parsing; then
         tests_passed=$((tests_passed + 1))
@@ -770,9 +770,9 @@ run_internal_tests() {
         tests_failed=$((tests_failed + 1))
         log_test "✗ zpool parsing tests failed"
     fi
-    
+
     log_test "Internal tests completed: $tests_passed passed, $tests_failed failed"
-    
+
     if [[ $tests_failed -eq 0 ]]; then
         return 0
     else
@@ -839,7 +839,7 @@ main() {
     local show_help=false
     local show_version=false
     local show_usage_examples=false
-    
+
     # Parse command line arguments
     while [[ $# -gt 0 ]]; do
         case $1 in
@@ -878,31 +878,31 @@ main() {
                 ;;
         esac
     done
-    
+
     # Handle help and version requests
     if [[ "$show_help" == "true" ]]; then
         show_usage
         return 0
     fi
-    
+
     if [[ "$show_version" == "true" ]]; then
         echo "$SCRIPT_NAME version $VERSION"
         return 0
     fi
-    
+
     if [[ "$show_usage_examples" == "true" ]]; then
         show_usage_examples
         return 0
     fi
-    
+
     # Run tests if requested
     if [[ "$run_tests" == "true" ]]; then
         run_internal_tests
         return $?
     fi
-    
+
     log_verbose "Starting ZPool Device Mapper v$VERSION"
-    
+
     # Build drive mapping table
     local mapping_result
     mapping_result=$(build_drive_mapping_table)
@@ -910,20 +910,20 @@ main() {
         log_error "Failed to build drive mapping table: $(result_error_msg "$mapping_result")"
         return 1
     fi
-    
+
     local drive_mappings
     drive_mappings=$(result_value "$mapping_result")
-    
+
     # Display results
     echo ""
     echo "ZPool Device Overview:"
     echo "=========================================================================================================="
-    
+
     if ! format_zpool_output "$drive_mappings"; then
         log_error "Failed to format zpool output"
         return 1
     fi
-    
+
     echo "=========================================================================================================="
     log_verbose "ZPool Device Mapper completed successfully"
 }
