@@ -23,33 +23,45 @@ readonly SCRIPT_NAME="zpool-device-mappings.sh"
 readonly VERSION="1.0.0"
 readonly LOG_PREFIX="[ZPOOL-MAP]"
 
+# Logging control (default: INFO - show normal progress)
+LOG_LEVEL=${LOG_LEVEL:-"INFO"}
+
 ##############################################################################
 # Logging Utilities
 ##############################################################################
 
-# Log an info message
-# @param $1: Message to log
-log_info() {
-    echo "${LOG_PREFIX} INFO: $1" >&2
-}
-
-# Log a warning message
-# @param $1: Message to log
-log_warn() {
-    echo "${LOG_PREFIX} WARN: $1" >&2
-}
-
-# Log an error message
-# @param $1: Message to log
+# Log an error message (always shown unless SILENT)
 log_error() {
-    echo "${LOG_PREFIX} ERROR: $1" >&2
+    [[ "$LOG_LEVEL" != "SILENT" ]] && echo "${LOG_PREFIX} ERROR: $1" >&2
+    return 0
 }
 
-# Log a debug message (only shown when DEBUG=true)
-# @param $1: Message to log
-log_debug() {
-    [[ "${DEBUG:-false}" == "true" ]] && echo "${LOG_PREFIX} DEBUG: $1" >&2
+# Log a warning message (shown in WARN, INFO, VERBOSE, DEBUG)
+log_warn() {
+    [[ "$LOG_LEVEL" =~ ^(WARN|INFO|VERBOSE|DEBUG)$ ]] && echo "${LOG_PREFIX} WARN: $1" >&2
     return 0
+}
+
+# Log an info message (shown in INFO, VERBOSE, DEBUG - DEFAULT)
+log_info() {
+    [[ "$LOG_LEVEL" =~ ^(INFO|VERBOSE|DEBUG)$ ]] && echo "${LOG_PREFIX} INFO: $1" >&2
+    return 0
+}
+
+# Log a debug message (only shown in VERBOSE, DEBUG)
+log_debug() {
+    [[ "$LOG_LEVEL" =~ ^(VERBOSE|DEBUG)$ ]] && echo "${LOG_PREFIX} DEBUG: $1" >&2
+    return 0
+}
+
+log_verbose() {
+    [[ "$LOG_LEVEL" =~ ^(VERBOSE)$ ]] && echo "${LOG_PREFIX} VERBOSE: $1" >&2
+    return 0
+}
+
+# Log a test message (always shown during tests)
+log_test() {
+    echo "${LOG_PREFIX} TEST: $1" >&2
 }
 
 ##############################################################################
@@ -354,7 +366,7 @@ get_uuid_for_device() {
 #   Success: Multiline string with format "key:value" for device mappings
 #   Error: Error message
 build_drive_mapping_table() {
-    log_info "Building drive mapping table..."
+    log_verbose "Building drive mapping table..."
     
     # Get ATA mappings
     local ata_result
@@ -412,7 +424,7 @@ build_drive_mapping_table() {
     done
     
     local mapping_count=$(echo "$mapping_output" | grep -c .)
-    log_info "Drive mapping table built with $mapping_count entries"
+    log_verbose "Drive mapping table built with $mapping_count entries"
     
     result_success "$mapping_output"
 }
@@ -454,7 +466,7 @@ process_ata_mappings_directly() {
 format_zpool_output() {
     local drive_mappings="$1"
     
-    log_info "Formatting zpool output..."
+    log_verbose "Formatting zpool output..."
     
     # Parse drive mappings into associative array
     declare -A drive_map
@@ -482,7 +494,7 @@ format_zpool_output() {
         return 1
     fi
     
-    log_info "Displaying zpool device information..."
+    log_verbose "Displaying zpool device information..."
     
     # Header
     echo "        NAME                                                       DRIVE       ID                      UUID"
@@ -581,7 +593,7 @@ format_zpool_output() {
             
     done <<< "$zpool_devices"
     
-    log_info "Displayed $device_count zpool devices"
+    log_verbose "Displayed $device_count zpool devices"
 }
 
 ##############################################################################
@@ -593,7 +605,7 @@ format_zpool_output() {
 #
 # Usage: test_zpool_parsing
 test_zpool_parsing() {
-    log_info "Testing zpool status parsing..."
+    log_test "Testing zpool status parsing..."
     
     local tests_passed=0
     local tests_failed=0
@@ -683,18 +695,18 @@ errors: No known data errors"
     # Verify we found the correct number of devices
     local device_count=$(echo "$parsed_devices" | wc -l)
     if [[ "$device_count" -eq 7 ]]; then
-        log_debug "✓ zpool parsing found 7 devices as expected"
+        log_test "✓ zpool parsing found 7 devices as expected"
         tests_passed=$((tests_passed + 1))
     else
-        log_error "✗ zpool parsing found $device_count devices, expected 7"
-        log_debug "Parsed devices:"
+        log_test "✗ zpool parsing found $device_count devices, expected 7"
+        log_test "Parsed devices:"
         echo "$parsed_devices" | while IFS= read -r line; do
-            log_debug "  $line"
+            log_test "  $line"
         done
         tests_failed=$((tests_failed + 1))
     fi
     
-    log_info "ZPool parsing tests completed: $tests_passed passed, $tests_failed failed"
+    log_test "ZPool parsing tests completed: $tests_passed passed, $tests_failed failed"
     return $tests_failed
 }
 
@@ -703,7 +715,7 @@ errors: No known data errors"
 #
 # Usage: run_internal_tests
 run_internal_tests() {
-    log_info "Running internal tests..."
+    log_test "Running internal tests..."
     
     local tests_passed=0
     local tests_failed=0
@@ -712,19 +724,19 @@ run_internal_tests() {
     local test_result
     test_result=$(result_success "test value")
     if result_is_success "$test_result" && [[ $(result_value "$test_result") == "test value" ]]; then
-        log_debug "✓ result_success/test_value passed"
+        log_test "✓ result_success/test_value passed"
         tests_passed=$((tests_passed + 1))
     else
-        log_error "✗ result_success/test_value failed"
+        log_test "✗ result_success/test_value failed"
         tests_failed=$((tests_failed + 1))
     fi
     
     test_result=$(result_error "test error") 
     if result_is_error "$test_result" && [[ $(result_error_msg "$test_result") == "test error" ]]; then
-        log_debug "✓ result_error/test_error passed"
+        log_test "✓ result_error/test_error passed"
         tests_passed=$((tests_passed + 1))
     else
-        log_error "✗ result_error/test_error failed"
+        log_test "✗ result_error/test_error failed"
         tests_failed=$((tests_failed + 1))
     fi
     
@@ -732,10 +744,10 @@ run_internal_tests() {
     local bind_result
     bind_result=$(result_bind "$(result_success "input")" "result_success")
     if result_is_success "$bind_result"; then
-        log_debug "✓ result_bind/success passed"
+        log_test "✓ result_bind/success passed"
         tests_passed=$((tests_passed + 1))
     else
-        log_error "✗ result_bind/success failed"
+        log_test "✗ result_bind/success failed"
         tests_failed=$((tests_failed + 1))
     fi
     
@@ -743,23 +755,23 @@ run_internal_tests() {
     local cmd_result
     cmd_result=$(try_cmd "echo 'test'" "Test command")
     if result_is_success "$cmd_result" && [[ $(result_value "$cmd_result") == "test" ]]; then
-        log_debug "✓ try_cmd/echo passed"
+        log_test "✓ try_cmd/echo passed"
         tests_passed=$((tests_passed + 1))
     else
-        log_error "✗ try_cmd/echo failed"
+        log_test "✗ try_cmd/echo failed"
         tests_failed=$((tests_failed + 1))
     fi
     
     # Run zpool parsing tests
     if test_zpool_parsing; then
         tests_passed=$((tests_passed + 1))
-        log_debug "✓ zpool parsing tests passed"
+        log_test "✓ zpool parsing tests passed"
     else
         tests_failed=$((tests_failed + 1))
-        log_error "✗ zpool parsing tests failed"
+        log_test "✗ zpool parsing tests failed"
     fi
     
-    log_info "Internal tests completed: $tests_passed passed, $tests_failed failed"
+    log_test "Internal tests completed: $tests_passed passed, $tests_failed failed"
     
     if [[ $tests_failed -eq 0 ]]; then
         return 0
@@ -785,12 +797,16 @@ OPTIONS:
     -h, --help          Show this help message
     -v, --version       Show version information
     -t, --test          Run internal tests
-    -d, --debug         Enable debug output
+    -q, --quiet         Suppress informational output (only errors/warnings)
+    -V, --verbose       Show verbose output (info + debug messages)
+    -d, --debug         Show debug output (most verbose)
     --usage             Show usage examples
 
 EXAMPLES:
-    $SCRIPT_NAME                    # Normal operation
-    $SCRIPT_NAME --debug           # With debug output
+    $SCRIPT_NAME                    # Normal operation (shows progress info)
+    $SCRIPT_NAME --quiet           # Quiet mode (only errors/warnings)
+    $SCRIPT_NAME --verbose         # Verbose mode (more details)
+    $SCRIPT_NAME --debug           # Debug mode (most verbose)
     $SCRIPT_NAME --test            # Run internal tests
 
 EOF
@@ -804,8 +820,8 @@ USAGE EXAMPLES:
 1. Basic usage:
    $ ./zpool-device-mappings.sh
 
-2. With debug information:
-   $ DEBUG=true ./zpool-device-mappings.sh
+2. With progress information:
+   $ ./zpool-device-mappings.sh --verbose
 
 3. Run self-tests:
    $ ./zpool-device-mappings.sh --test
@@ -839,8 +855,16 @@ main() {
                 run_tests=true
                 shift
                 ;;
+            -q|--quiet)
+                LOG_LEVEL="WARN"
+                shift
+                ;;
+            -V|--verbose)
+                LOG_LEVEL="VERBOSE"
+                shift
+                ;;
             -d|--debug)
-                export DEBUG=true
+                LOG_LEVEL="DEBUG"
                 shift
                 ;;
             --usage)
@@ -877,7 +901,7 @@ main() {
         return $?
     fi
     
-    log_info "Starting ZPool Device Mapper v$VERSION"
+    log_verbose "Starting ZPool Device Mapper v$VERSION"
     
     # Build drive mapping table
     local mapping_result
@@ -901,7 +925,7 @@ main() {
     fi
     
     echo "=========================================================================================================="
-    log_info "ZPool Device Mapper completed successfully"
+    log_verbose "ZPool Device Mapper completed successfully"
 }
 
 # Execute main function if script is run directly
