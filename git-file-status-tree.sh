@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 #
-# git-file-status.sh — list tracked, untracked, and ignored files as simple list
+# git-file-status-tree.sh — list tracked, untracked, and ignored files grouped by directory
 #
 # Author: Najib & GPT-5
-# Version: 1.1 — Fixed escape characters
-#
+# Version: 2.0
+
 # --- Helper Functions -------------------------------------------------------
 
 # Pretty title section
@@ -16,16 +16,22 @@ print_section() {
   echo "============================================================"
 }
 
-# Render files as simple list with color
-# Accepts: color code as $1, file paths from stdin
-print_list() {
+# Render a list as tree-like structure
+# Each argument = color code + lines from stdin
+print_tree() {
   local color="$1"
+  shift
 
-  while IFS= read -r file; do
-    if [[ -n "$file" ]]; then
-      echo -e "${color}${file}\033[0m"
-    fi
-  done
+  # Ensure consistent sorting and readable indentation
+  awk -F'/' -v color="$color" '
+  {
+    indent = ""
+    for (i = 1; i < NF; i++) {
+      indent = indent "    "   # 4 spaces per level
+    }
+    printf "%s%s└── %s\033[0m\n", indent, color, $NF
+  }
+  '
 }
 
 # --- Main -------------------------------------------------------------------
@@ -46,7 +52,7 @@ ignored_files=$(git ls-files --others --ignored --exclude-standard)
 # --- Show tracked -----------------------------------------------------------
 print_section "✅ TRACKED FILES"
 if [[ -n "$tracked_files" ]]; then
-  echo "$tracked_files" | sort | print_list "\033[1;32m"   # green
+  echo "$tracked_files" | sort | print_tree "\033[1;32m"   # green
 else
   echo "  (none)"
 fi
@@ -54,7 +60,7 @@ fi
 # --- Show untracked ---------------------------------------------------------
 print_section "⚠️  UNTRACKED FILES"
 if [[ -n "$untracked_files" ]]; then
-  echo "$untracked_files" | sort | print_list "\033[1;33m"  # yellow
+  echo "$untracked_files" | sort | print_tree "\033[1;33m"  # yellow
 else
   echo "  (none)"
 fi
@@ -62,7 +68,7 @@ fi
 # --- Show ignored -----------------------------------------------------------
 print_section "🚫 IGNORED FILES"
 if [[ -n "$ignored_files" ]]; then
-  echo "$ignored_files" | sort | print_list "\033[1;31m"    # red
+  echo "$ignored_files" | sort | print_tree "\033[1;31m"    # red
 else
   echo "  (none)"
 fi
@@ -73,7 +79,8 @@ untracked_count=$(echo "$untracked_files" | grep -c . || true)
 ignored_count=$(echo "$ignored_files" | grep -c . || true)
 
 print_section "📊 SUMMARY"
-printf "  ✅ Tracked   : %d\n" "$tracked_count"
+printf "  ✅ Tracked : %d\n" "$tracked_count"
 printf "  ⚠️  Untracked : %d\n" "$untracked_count"
-printf "  🚫 Ignored   : %d\n" "$ignored_count"
+printf "  🚫 Ignored : %d\n" "$ignored_count"
 echo
+
