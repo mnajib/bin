@@ -188,7 +188,8 @@ print_pid_summary() {
     pid_to_command["$pid"]="$cmdline"
   done
 
-  echo -e "\n🧩 Compositor PID Summary:"
+  #echo -e "\n🧩 Compositor PID Summary:"
+  echo -e "\nCompositor PID Summary:"
   for pid in "${!pid_to_sockets[@]}"; do
     if [[ "$verbose" -eq 1 ]]; then
       echo "  $pid → ${pid_to_compositor[$pid]} → ${pid_to_command[$pid]}"
@@ -215,18 +216,18 @@ run_detection() {
   declare -A pid_to_command
 
   if [[ "${#sockets[@]}" -eq 0 ]]; then
-    echo "⚠️  No active display sockets found."
+    echo "No active display sockets found."
     return 1
   fi
 
   if [[ "$EUID" -ne 0 ]]; then
     echo ""
-    echo "⚠️  Some display sockets may be misclassified due to permission limits."
-    echo "   Run with sudo to see full compositor ownership and command details."
+    echo "Some display sockets may be misclassified due to permission limits."
+    echo "  Run with sudo to see full compositor ownership and command details."
   fi
 
   echo ""
-  echo "🔍 Detected display sockets and owning compositors:"
+  echo "Detected display sockets and owning compositors:"
   local display_map=()
   for sock in "${sockets[@]}"; do
     IFS='|' read -r name path pid compositor cmdline <<< "$(get_socket_info "$sock")"
@@ -289,7 +290,7 @@ run_detection() {
 
   if [[ "$rank" -eq 1 ]]; then
     echo ""
-    echo "🏆 Ranked display candidates:"
+    echo "Ranked display candidates:"
     IFS=$'\n' sorted=($(sort <<<"${display_map[*]}"))
     unset IFS
     for entry in "${sorted[@]}"; do
