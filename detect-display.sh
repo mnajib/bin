@@ -75,8 +75,16 @@ get_related_process_tree() {
 
   # Collect all processes that mention the compositor name
   #ps -eo pid=,ppid=,comm=,args= | awk -v comp="$compositor" '
+  #ps -eo pid=,ppid=,comm=,args= | awk -v root="$root_pid" -v comp="$compositor" '
+  #  tolower($0) ~ tolower(comp) {
+  #    pid=$1; ppid=$2; comm=$3;
+  #    $1=""; $2=""; $3="";
+  #    args=substr($0, index($0,$4));
+  #    print pid "|" ppid "|" comm "|" args;
+  #  }
+  #' > "$tmpfile"
   ps -eo pid=,ppid=,comm=,args= | awk -v root="$root_pid" -v comp="$compositor" '
-    tolower($0) ~ tolower(comp) {
+    tolower($0) ~ tolower(comp) || $2 == root {
       pid=$1; ppid=$2; comm=$3;
       $1=""; $2=""; $3="";
       args=substr($0, index($0,$4));
