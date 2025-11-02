@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
 
+# ANSI colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+MAGENTA='\033[0;35m'
+BOLD='\033[1m'
+RESET='\033[0m'
+
 print_help() {
   cat <<EOF
 Usage: $(basename "$0") [OPTIONS]
@@ -10,6 +20,7 @@ Options:
   --verbose       Show detailed info for each socket (path, PID, command line)
   --related       Show all processes related to each compositor, must combine with --verbose
   --rank          Show ranked display exports by compositor preference
+  --color         Print with colors
   -h, --help      Show this help message and exit
 
 Examples:
@@ -112,6 +123,11 @@ get_related_process_tree() {
     for child in "${kids[@]}"; do
       local guide="├─"
       (( i == count - 1 )) && guide="└─"
+
+      if [[ "$color" -eq 1 ]]; then
+        guide="${BLUE}${guide}${RESET}"
+      fi
+
       echo "$prefix$guide ${proc_line[$child]}"
       print_tree "$child" "$prefix    "
       ((i++))
@@ -305,6 +321,7 @@ main() {
   local verbose=0
   local rank=0
   local related=0
+  local color=0
 
   for arg in "$@"; do
     case "$arg" in
@@ -322,6 +339,7 @@ main() {
         related=1
         ;;
       --test) test=1 ;;
+      --color) color=1 ;;
       *)
         echo "❌ Unknown option: $arg"
         echo "Run with --help to see usage."
