@@ -139,6 +139,10 @@ run_detection() {
   mapfile -t wayland_sockets < <(get_wayland_sockets)
   sockets=("${x11_sockets[@]}" "${wayland_sockets[@]}")
 
+  declare -A pid_to_sockets
+  declare -A pid_to_compositor
+  declare -A pid_to_command
+
   if [[ "${#sockets[@]}" -eq 0 ]]; then
     echo "⚠️  No active display sockets found."
     return 1
@@ -155,6 +159,12 @@ run_detection() {
   local display_map=()
   for sock in "${sockets[@]}"; do
     IFS='|' read -r name path pid compositor cmdline <<< "$(get_socket_info "$sock")"
+
+    [[ -n "$pid" ]] || continue
+    pid_to_sockets["$pid"]+="$name "
+    pid_to_compositor["$pid"]="$compositor"
+    pid_to_command["$pid"]="$cmdline"
+
     rank_val=$(get_rank "$compositor")
     display_map+=("$rank_val|$name|$compositor|$pid|$path|$cmdline")
 
@@ -174,6 +184,16 @@ run_detection() {
       fi
     else
       echo "  - $name → $compositor"
+    fi
+  done
+
+  echo -e "\n🧩 Compositor PID Summary:"
+  for pid in "${!pid_to_sockets[@]}"; do
+    if [[ "$verbose" -eq 1 ]]; then
+      echo "  $pid → ${pid_to_compositor[$pid]} → ${pid_to_command[$pid]}"
+      echo "    Sockets: ${pid_to_sockets[$pid]}"
+    else
+      echo "  PID $pid (${pid_to_compositor[$pid]}) serves: ${pid_to_sockets[$pid]}"
     fi
   done
 
