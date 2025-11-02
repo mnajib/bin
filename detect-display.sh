@@ -141,6 +141,8 @@ get_related_process_tree() {
 
       if [[ "$color" -eq 1 ]]; then
         guide="${FG_CYAN}${guide}${RESET}"
+      #else
+      #  guide="${RESET}${guide}"
       fi
 
       #echo "$prefix$guide ${proc_line[$child]}"
@@ -292,10 +294,26 @@ run_detection() {
     unset IFS
     for entry in "${sorted[@]}"; do
       IFS='|' read -r rank name compositor pid path cmdline <<< "$entry"
+      #if [[ "$color" -eq 1 ]]; then
+      #  name="${FG_CYAN}${name}${RESET}"
+      #  compositor="${FG_MAGENTA}${compositor}${RESET}"
+      #fi
       if [[ "$name" =~ ^X([0-9]+)$ ]]; then
-        echo "  export DISPLAY=:${BASH_REMATCH[1]}  # $compositor"
+        #echo "  export DISPLAY=:${BASH_REMATCH[1]}  # $compositor"
+        #echo -e "  export DISPLAY=:${BASH_REMATCH[1]}  # $compositor"
+        if [[ "$color" -eq 1 ]]; then
+          echo -e "  export DISPLAY=${FG_CYAN}:${BASH_REMATCH[1]}${RESET}  # ${FG_MAGENTA}${compositor}${RESET}"
+        else
+          echo "  export DISPLAY=:${BASH_REMATCH[1]}  # $compositor"
+        fi
       else
-        echo "  export DISPLAY=$name  # $compositor"
+        #echo "  export DISPLAY=$name  # $compositor"
+        #echo -e "  export DISPLAY=$name  # $compositor"
+        if [[ "$color" -eq 1 ]]; then
+          echo -e "  export DISPLAY=${FG_CYAN}${name}${RESET}  # ${FG_MAGENTA}${compositor}${RESET}"
+        else
+          echo "  export DISPLAY=$name  # $compositor"
+        fi
       fi
     done
   fi
