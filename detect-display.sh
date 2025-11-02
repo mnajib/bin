@@ -1,14 +1,29 @@
 #!/usr/bin/env bash
 
 # ANSI colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
-MAGENTA='\033[0;35m'
-BOLD='\033[1m'
+#RED='\033[0;31m'
+#GREEN='\033[0;32m'
+#YELLOW='\033[1;33m'
+#BLUE='\033[0;34m'
+#CYAN='\033[0;36m'
+#MAGENTA='\033[0;35m'
+#BOLD='\033[1m'
+#RESET='\033[0m'
+#--------------------------------------
+# ANSI color codes (safe for most terminals)
 RESET='\033[0m'
+BOLD='\033[1m'
+
+FG_RED='\033[31m'
+FG_GREEN='\033[32m'
+FG_YELLOW='\033[33m'
+FG_BLUE='\033[34m'
+FG_MAGENTA='\033[35m'
+FG_CYAN='\033[36m'
+FG_WHITE='\033[37m'
+
+DIM='\033[2m'
+#--------------------------------------
 
 print_help() {
   cat <<EOF
@@ -125,10 +140,19 @@ get_related_process_tree() {
       (( i == count - 1 )) && guide="└─"
 
       if [[ "$color" -eq 1 ]]; then
-        guide="${BLUE}${guide}${RESET}"
+        guide="${FG_CYAN}${guide}${RESET}"
       fi
 
-      echo "$prefix$guide ${proc_line[$child]}"
+      #echo "$prefix$guide ${proc_line[$child]}"
+      #
+      #if [[ "$color" -eq 1 ]]; then
+      #  echo "$prefix$guide ${proc_line[$child]}"
+      #else
+      #  echo -e "${FG_BLUE}${guide}${RESET} ${proc_line[$child]}"
+      #fi
+      #
+      echo -e "$prefix$guide ${proc_line[$child]}"
+
       print_tree "$child" "$prefix    "
       ((i++))
     done
@@ -177,6 +201,7 @@ run_detection() {
   local verbose="${1:-0}"
   local rank="${2:-0}"
   local related="${3:-0}"
+  local color="${4:-0}"
   local sockets=()
   mapfile -t x11_sockets < <(get_x11_sockets)
   mapfile -t wayland_sockets < <(get_wayland_sockets)
@@ -357,7 +382,7 @@ main() {
     return
   fi
 
-  run_detection "$verbose" "$rank" "$related"
+  run_detection "$verbose" "$rank" "$related" "$color"
 }
 
 main "$@"
