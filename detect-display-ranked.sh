@@ -11,21 +11,28 @@ get_wayland_sockets() {
 }
 
 # Pure function: maps socket to owning process and compositor
-get_compositor_for_socket() {
+get_socket_info() {
   local socket="$1"
-  local pid
+  local name pid cmdline compositor
+
+  name=$(basename "$socket")
   pid=$(lsof -t "$socket" 2>/dev/null | head -n1)
-  [[ -z "$pid" ]] && echo "Unknown" && return
+  cmdline=$(ps -p "$pid" -o args= 2>/dev/null)
 
-  local cmd
-  cmd=$(ps -p "$pid" -o comm=)
+  if [[ -z "$pid" ]]; then
+    compositor="Unknown"
+  else
+    local comm
+    comm=$(ps -p "$pid" -o comm=)
+    case "$comm" in
+      Xorg|X) compositor="Xorg" ;;
+      Xwayland) compositor="XWayland" ;;
+      Hyprland) compositor="Hyprland" ;;
+      *) compositor="$comm" ;;
+    esac
+  fi
 
-  case "$cmd" in
-    Xorg|X) echo "Xorg" ;;
-    Xwayland) echo "XWayland" ;;
-    Hyprland) echo "Hyprland" ;;
-    *) echo "$cmd" ;;
-  esac
+  echo "$name|$socket|$pid|$compositor|$cmdline"
 }
 
 # Pure function: ranks compositor types
@@ -40,10 +47,10 @@ get_rank() {
 
 # Main logic
 main() {
-  local sockets=()
-  local display_map=()
+  local verbose=0
+  [[ "$1" == "--verbose" ]] && verbose=1
 
-  # Collect sockets
+  local sockets=()
   mapfile -t x11_sockets < <(get_x11_sockets)
   mapfile -t wayland_sockets < <(get_wayland_sockets)
   sockets=("${x11_sockets[@]}" "${wayland_sockets[@]}")
@@ -54,22 +61,30 @@ main() {
   fi
 
   echo "🔍 Detected display sockets and owning compositors:"
+  local display_map=()
   for sock in "${sockets[@]}"; do
-    local name compositor rank
-    name=$(basename "$sock")
-    compositor=$(get_compositor_for_socket "$sock")
+    IFS='|' read -r name path pid compositor cmdline <<< "$(get_socket_info "$sock")"
     rank=$(get_rank "$compositor")
-    display_map+=("$rank|$name|$compositor")
-  done
+    display_map+=("$rank|$name|$compositor|$pid|$path|$cmdline")
 
-  # Sort and display ranked results
-  IFS=$'\n' sorted=($(sort <<<"${display_map[*]}"))
-  unset IFS
+    if [[ "$verbose" -eq 1 ]]; then
+      echo "  - $name"
+      echo "      Path      : $path"
+      echo "      PID       : ${pid:-(none)}"
+      echo "      Compositor: $compositor"
+      echo "      Command   : ${cmdline:-(none)}"
+    else
+      echo "  - $name → $compositor"
+    fi
+  done
 
   echo ""
   echo "🏆 Ranked display candidates:"
+  IFS=$'\n' sorted=($(sort <<<"${display_map[*]}"))
+  unset IFS
+
   for entry in "${sorted[@]}"; do
-    IFS='|' read -r rank name compositor <<< "$entry"
+    IFS='|' read -r rank name compositor pid path cmdline <<< "$entry"
     if [[ "$name" =~ ^X([0-9]+)$ ]]; then
       echo "  export DISPLAY=:${BASH_REMATCH[1]}  # $compositor"
     else
