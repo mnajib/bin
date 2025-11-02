@@ -66,6 +66,62 @@ get_related_processes() {
   ps -eo pid,ppid,comm,args | grep -i "$compositor" | grep -v grep
 }
 
+get_related_process_tree() {
+  local compositor="$1"
+  local root_pid="$2"
+
+  local tmpfile
+  tmpfile=$(mktemp)
+
+  # Collect all processes that mention the compositor name
+  #ps -eo pid=,ppid=,comm=,args= | awk -v comp="$compositor" '
+  ps -eo pid=,ppid=,comm=,args= | awk -v root="$root_pid" -v comp="$compositor" '
+    tolower($0) ~ tolower(comp) {
+      pid=$1; ppid=$2; comm=$3;
+      $1=""; $2=""; $3="";
+      args=substr($0, index($0,$4));
+      print pid "|" ppid "|" comm "|" args;
+    }
+  ' > "$tmpfile"
+
+  declare -A proc_line
+  declare -A children
+
+  while IFS='|' read -r pid ppid comm args; do
+    proc_line["$pid"]="$pid $ppid $comm $args"
+    children["$ppid"]+="$pid "
+  done < "$tmpfile"
+
+  rm -f "$tmpfile"
+
+  print_tree() {
+    local parent="$1"
+    local prefix="$2"
+    local kids=(${children[$parent]})
+    local count="${#kids[@]}"
+    local i=0
+
+    for child in "${kids[@]}"; do
+      local guide="├─"
+      (( i == count - 1 )) && guide="└─"
+      echo "$prefix$guide ${proc_line[$child]}"
+      print_tree "$child" "$prefix    "
+      ((i++))
+    done
+  }
+
+  # If root PID is known, start from it
+  if [[ -n "$root_pid" && -n "${proc_line[$root_pid]}" ]]; then
+    echo "${proc_line[$root_pid]}"
+    print_tree "$root_pid" ""
+  else
+    # Otherwise print all matching roots
+    for pid in "${!proc_line[@]}"; do
+      echo "${proc_line[$pid]}"
+    done
+  fi
+}
+
 run_detection() {
   local verbose="${1:-0}"
   local rank="${2:-0}"
@@ -103,7 +159,8 @@ run_detection() {
 
       if [[ "$related" -eq 1 ]]; then
         echo "      Related processes:"
-        get_related_processes "$compositor" | while read -r line; do
+        #get_related_processes "$compositor" | while read -r line; do
+        get_related_process_tree "$compositor" "$pid" | while read -r line; do
           echo "        $line"
         done
       fi
@@ -128,6 +185,47 @@ run_detection() {
   fi
 }
 
+test_get_x11_sockets() {
+  echo "🧪 Testing get_x11_sockets..."
+  get_x11_sockets | while read -r sock; do
+    echo "  Found X11 socket: $sock"
+  done
+}
+
+test_get_wayland_sockets() {
+  echo "🧪 Testing get_wayland_sockets..."
+  get_wayland_sockets | while read -r sock; do
+    echo "  Found Wayland socket: $sock"
+  done
+}
+
+test_get_socket_info() {
+  echo "🧪 Testing get_socket_info..."
+  local sockets=($(get_x11_sockets) $(get_wayland_sockets))
+  for sock in "${sockets[@]}"; do
+    IFS='|' read -r name path pid compositor cmdline <<< "$(get_socket_info "$sock")"
+    echo "  $name → $compositor (PID: ${pid:-none})"
+  done
+}
+
+test_get_rank() {
+  echo "🧪 Testing get_rank..."
+  for comp in Xorg Hyprland XWayland river unknown; do
+    echo "  $comp → rank $(get_rank "$comp")"
+  done
+}
+
+test_related_tree() {
+  echo "🧪 Testing get_related_process_tree..."
+  local sockets=($(get_x11_sockets) $(get_wayland_sockets))
+  for sock in "${sockets[@]}"; do
+    IFS='|' read -r name path pid compositor cmdline <<< "$(get_socket_info "$sock")"
+    echo "  Tree for $name ($compositor):"
+    get_related_process_tree "$compositor" "$pid" | sed 's/^/    /'
+    echo ""
+  done
+}
+
 main() {
   local verbose=0
   local rank=0
@@ -148,6 +246,7 @@ main() {
       --related)
         related=1
         ;;
+      --test) test=1 ;;
       *)
         echo "❌ Unknown option: $arg"
         echo "Run with --help to see usage."
@@ -155,6 +254,15 @@ main() {
         ;;
     esac
   done
+
+  if [[ "$test" -eq 1 ]]; then
+    test_get_x11_sockets
+    test_get_wayland_sockets
+    test_get_socket_info
+    test_get_rank
+    test_related_tree
+    return
+  fi
 
   run_detection "$verbose" "$rank" "$related"
 }
