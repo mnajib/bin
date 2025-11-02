@@ -8,13 +8,15 @@ Detect active display sockets and their owning compositors (Xorg, Hyprland, XWay
 
 Options:
   --verbose       Show detailed info for each socket (path, PID, command line)
+  --related       Show all processes related to each compositor, must combine with --verbose
   --rank          Show ranked display exports by compositor preference
   -h, --help      Show this help message and exit
 
 Examples:
-  $(basename "$0")             # Show detected sockets and compositors
-  $(basename "$0") --verbose   # Show full socket diagnostics
-  $(basename "$0") --rank      # Show ranked display exports
+  $(basename "$0")                      # Show detected sockets and compositors
+  $(basename "$0") --verbose            # Show full socket diagnostics
+  $(basename "$0") --verbose --related  # Show full socket diagnostics, and related process
+  $(basename "$0") --rank               # Show ranked display exports
 EOF
 }
 
@@ -59,9 +61,15 @@ get_rank() {
   esac
 }
 
+get_related_processes() {
+  local compositor="$1"
+  ps -eo pid,ppid,comm,args | grep -i "$compositor" | grep -v grep
+}
+
 run_detection() {
   local verbose="${1:-0}"
   local rank="${2:-0}"
+  local related="${3:-0}"
   local sockets=()
   mapfile -t x11_sockets < <(get_x11_sockets)
   mapfile -t wayland_sockets < <(get_wayland_sockets)
@@ -92,6 +100,13 @@ run_detection() {
       echo "      PID       : ${pid:-(none)}"
       echo "      Compositor: $compositor"
       echo "      Command   : ${cmdline:-(none)}"
+
+      if [[ "$related" -eq 1 ]]; then
+        echo "      Related processes:"
+        get_related_processes "$compositor" | while read -r line; do
+          echo "        $line"
+        done
+      fi
     else
       echo "  - $name → $compositor"
     fi
@@ -116,6 +131,7 @@ run_detection() {
 main() {
   local verbose=0
   local rank=0
+  local related=0
 
   for arg in "$@"; do
     case "$arg" in
@@ -129,6 +145,9 @@ main() {
       --rank)
         rank=1
         ;;
+      --related)
+        related=1
+        ;;
       *)
         echo "❌ Unknown option: $arg"
         echo "Run with --help to see usage."
@@ -137,7 +156,7 @@ main() {
     esac
   done
 
-  run_detection "$verbose" "$rank"
+  run_detection "$verbose" "$rank" "$related"
 }
 
 main "$@"
