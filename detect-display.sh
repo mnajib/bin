@@ -1,60 +1,143 @@
 #!/usr/bin/env bash
 
-# Pure function: returns list of available X11 display sockets
-get_x11_displays() {
-  local sock
-  for sock in /tmp/.X11-unix/X*; do
-    [[ -e "$sock" ]] && echo ":${sock##*/X}"
-  done
+print_help() {
+  cat <<EOF
+Usage: $(basename "$0") [OPTIONS]
+
+Detect active display sockets and their owning compositors (Xorg, Hyprland, XWayland), without relying on environment variables.
+
+Options:
+  --verbose       Show detailed info for each socket (path, PID, command line)
+  --rank          Show ranked display exports by compositor preference
+  -h, --help      Show this help message and exit
+
+Examples:
+  $(basename "$0")             # Show detected sockets and compositors
+  $(basename "$0") --verbose   # Show full socket diagnostics
+  $(basename "$0") --rank      # Show ranked display exports
+EOF
 }
 
-# Pure function: returns list of running Xorg/Xwayland display numbers
-get_x_process_displays() {
-  ps -eo args | grep -E 'X(org|wayland)' | grep -o ':[0-9]\+' | sort -u
+get_x11_sockets() {
+  ls /tmp/.X11-unix/X* 2>/dev/null
 }
 
-# Pure function: returns list of Wayland display sockets
-get_wayland_displays() {
-  local sock
-  for sock in /run/user/"$UID"/wayland-*; do
-    [[ -e "$sock" ]] && echo "${sock##*/}"
-  done
+get_wayland_sockets() {
+  ls /run/user/"$UID"/wayland-* 2>/dev/null | grep -v '\.lock$'
 }
 
-# Main logic
-main() {
-  local wayland_displays x11_displays xproc_displays found=0
+get_socket_info() {
+  local socket="$1"
+  local name pid cmdline compositor
 
-  echo "🔍 Scanning for active display sockets..."
+  name=$(basename "$socket")
+  pid=$(lsof -t "$socket" 2>/dev/null | head -n1)
+  cmdline=$(ps -p "$pid" -o args= 2>/dev/null)
 
-  wayland_displays=$(get_wayland_displays)
-  x11_displays=$(get_x11_displays)
-  xproc_displays=$(get_x_process_displays)
-
-  if [[ -n "$wayland_displays" ]]; then
-    echo "🟢 Wayland displays:"
-    echo "$wayland_displays" | sed 's/^/  - /'
-    found=1
+  if [[ -z "$pid" ]]; then
+    compositor="Unknown"
+  else
+    local comm
+    comm=$(ps -p "$pid" -o comm=)
+    case "$comm" in
+      Xorg|X) compositor="Xorg" ;;
+      Xwayland) compositor="XWayland" ;;
+      Hyprland) compositor="Hyprland" ;;
+      *) compositor="$comm" ;;
+    esac
   fi
 
-  if [[ -n "$x11_displays" ]]; then
-    echo "🟢 X11 sockets:"
-    echo "$x11_displays" | sed 's/^/  - /'
-    found=1
-  fi
+  echo "$name|$socket|$pid|$compositor|$cmdline"
+}
 
-  if [[ -n "$xproc_displays" ]]; then
-    echo "🟢 Xorg/XWayland processes:"
-    echo "$xproc_displays" | sed 's/^/  - /'
-    found=1
-  fi
+get_rank() {
+  case "$1" in
+    Xorg) echo 1 ;;
+    Hyprland) echo 2 ;;
+    XWayland) echo 3 ;;
+    *) echo 9 ;;
+  esac
+}
 
-  if [[ "$found" -eq 0 ]]; then
-    echo "⚠️ No active display servers detected."
+run_detection() {
+  local verbose="${1:-0}"
+  local rank="${2:-0}"
+  local sockets=()
+  mapfile -t x11_sockets < <(get_x11_sockets)
+  mapfile -t wayland_sockets < <(get_wayland_sockets)
+  sockets=("${x11_sockets[@]}" "${wayland_sockets[@]}")
+
+  if [[ "${#sockets[@]}" -eq 0 ]]; then
+    echo "⚠️  No active display sockets found."
     return 1
   fi
 
-  echo "✅ To use a display, run: export DISPLAY=:0 or export DISPLAY=wayland-1"
+  if [[ "$EUID" -ne 0 ]]; then
+    echo ""
+    echo "⚠️  Some display sockets may be misclassified due to permission limits."
+    echo "   Run with sudo to see full compositor ownership and command details."
+  fi
+
+  echo ""
+  echo "🔍 Detected display sockets and owning compositors:"
+  local display_map=()
+  for sock in "${sockets[@]}"; do
+    IFS='|' read -r name path pid compositor cmdline <<< "$(get_socket_info "$sock")"
+    rank_val=$(get_rank "$compositor")
+    display_map+=("$rank_val|$name|$compositor|$pid|$path|$cmdline")
+
+    if [[ "$verbose" -eq 1 ]]; then
+      echo "  - $name"
+      echo "      Path      : $path"
+      echo "      PID       : ${pid:-(none)}"
+      echo "      Compositor: $compositor"
+      echo "      Command   : ${cmdline:-(none)}"
+    else
+      echo "  - $name → $compositor"
+    fi
+  done
+
+  if [[ "$rank" -eq 1 ]]; then
+    echo ""
+    echo "🏆 Ranked display candidates:"
+    IFS=$'\n' sorted=($(sort <<<"${display_map[*]}"))
+    unset IFS
+    for entry in "${sorted[@]}"; do
+      IFS='|' read -r rank name compositor pid path cmdline <<< "$entry"
+      if [[ "$name" =~ ^X([0-9]+)$ ]]; then
+        echo "  export DISPLAY=:${BASH_REMATCH[1]}  # $compositor"
+      else
+        echo "  export DISPLAY=$name  # $compositor"
+      fi
+    done
+  fi
+}
+
+main() {
+  local verbose=0
+  local rank=0
+
+  for arg in "$@"; do
+    case "$arg" in
+      -h|--help)
+        print_help
+        return 0
+        ;;
+      --verbose)
+        verbose=1
+        ;;
+      --rank)
+        rank=1
+        ;;
+      *)
+        echo "❌ Unknown option: $arg"
+        echo "Run with --help to see usage."
+        return 1
+        ;;
+    esac
+  done
+
+  run_detection "$verbose" "$rank"
 }
 
 main "$@"
