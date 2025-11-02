@@ -45,10 +45,43 @@ get_rank() {
   esac
 }
 
+print_help() {
+  cat <<EOF
+Usage: $(basename "$0") [OPTIONS]
+
+Detect and rank active display sockets by compositor (Xorg, Hyprland, XWayland), without relying on environment variables.
+
+Options:
+  --verbose       Show detailed info for each socket (path, PID, command line)
+  -h, --help      Show this help message and exit
+
+Examples:
+  $(basename "$0")             # Show ranked display exports
+  $(basename "$0") --verbose   # Show full socket diagnostics
+EOF
+}
+
 # Main logic
 main() {
   local verbose=0
-  [[ "$1" == "--verbose" ]] && verbose=1
+  local arg="${1:-}"
+
+  case "$arg" in
+    -h|--help)
+      print_help
+      return 0
+      ;;
+    --verbose)
+      verbose=1
+      ;;
+    "")
+      ;;
+    *)
+      echo "❌ Unknown option: $arg"
+      echo "Run with --help to see usage."
+      return 1
+      ;;
+  esac
 
   local sockets=()
   mapfile -t x11_sockets < <(get_x11_sockets)
@@ -56,10 +89,17 @@ main() {
   sockets=("${x11_sockets[@]}" "${wayland_sockets[@]}")
 
   if [[ "${#sockets[@]}" -eq 0 ]]; then
-    echo "⚠️ No active display sockets found."
+    echo "⚠️  No active display sockets found."
     return 1
   fi
 
+  if [[ "$EUID" -ne 0 ]]; then
+    echo ""
+    echo "⚠️  Some display sockets may be misclassified due to permission limits."
+    echo "   Run with sudo to see full compositor ownership and command details."
+  fi
+
+  echo ""
   echo "🔍 Detected display sockets and owning compositors:"
   local display_map=()
   for sock in "${sockets[@]}"; do
@@ -92,6 +132,7 @@ main() {
     fi
   done
 }
+
 
 main "$@"
 
