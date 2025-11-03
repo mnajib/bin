@@ -160,10 +160,28 @@ run_detection() {
   for sock in "${sockets[@]}"; do
     IFS='|' read -r name path pid compositor cmdline <<< "$(get_socket_info "$sock")"
 
-    [[ -n "$pid" ]] || continue
-    pid_to_sockets["$pid"]+="$name "
-    pid_to_compositor["$pid"]="$compositor"
-    pid_to_command["$pid"]="$cmdline"
+    #[[ -n "$pid" ]] || continue
+    #pid_to_sockets["$pid"]+="$name "
+    #pid_to_compositor["$pid"]="$compositor"
+    #pid_to_command["$pid"]="$cmdline"
+    #
+    if [[ -n "$pid" ]]; then
+      # Append socket name to list (space-separated)
+      if [[ -n "${pid_to_sockets[$pid]}" ]]; then
+        pid_to_sockets["$pid"]+=", $name"
+      else
+        pid_to_sockets["$pid"]="$name"
+      fi
+
+      # Only set compositor/command if not already set
+      [[ -z "${pid_to_compositor[$pid]}" ]] && pid_to_compositor["$pid"]="$compositor"
+      [[ -z "${pid_to_command[$pid]}" ]] && pid_to_command["$pid"]="$cmdline"
+    else
+      # Optional: track unknown PID sockets
+      pid_to_sockets["(none)"]+=", $name"
+      pid_to_compositor["(none)"]="Unknown"
+      pid_to_command["(none)"]="(none)"
+    fi
 
     rank_val=$(get_rank "$compositor")
     display_map+=("$rank_val|$name|$compositor|$pid|$path|$cmdline")
