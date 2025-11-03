@@ -172,6 +172,11 @@ get_related_process_tree() {
   fi
 }
 
+get_user_for_pid() {
+  local pid="$1"
+  ps -o user= -p "$pid" 2>/dev/null | awk '{print $1}'
+}
+
 print_pid_summary() {
   local verbose="$1"
   declare -n sockets_ref="$2"  # Pass array name by reference
@@ -191,11 +196,13 @@ print_pid_summary() {
   #echo -e "\n🧩 Compositor PID Summary:"
   echo -e "\nCompositor PID Summary:"
   for pid in "${!pid_to_sockets[@]}"; do
+    local user="$(get_user_for_pid "$pid")"
     if [[ "$verbose" -eq 1 ]]; then
       echo "  $pid → ${pid_to_compositor[$pid]} → ${pid_to_command[$pid]}"
+      echo "    User   : ${user:-unknown}"
       echo "    Sockets: ${pid_to_sockets[$pid]}"
     else
-      echo "  PID $pid (${pid_to_compositor[$pid]}) serves: ${pid_to_sockets[$pid]}"
+      echo "  PID $pid (${pid_to_compositor[$pid]}, user: ${user:-unknown}) serves: ${pid_to_sockets[$pid]}"
     fi
   done
 }
@@ -223,6 +230,7 @@ run_detection() {
   if [[ "$EUID" -ne 0 ]]; then
     echo ""
     echo "Some display sockets may be misclassified due to permission limits."
+    #echo "  Some sockets may not be mapped to a compositor."
     echo "  Run with sudo to see full compositor ownership and command details."
   fi
 
