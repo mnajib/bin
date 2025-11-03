@@ -245,16 +245,13 @@ run_detection() {
   local rank="${2:-0}"
   local related="${3:-0}"
   local color="${4:-0}"
+
+  # Phase 1: Initialization
+  declare -A pid_to_sockets pid_to_compositor pid_to_command unmapped_sockets
   local sockets=()
   mapfile -t x11_sockets < <(get_x11_sockets)
   mapfile -t wayland_sockets < <(get_wayland_sockets)
   sockets=("${x11_sockets[@]}" "${wayland_sockets[@]}")
-  #sockets=($(get_x11_sockets) $(get_wayland_sockets))
-
-  declare -A pid_to_sockets
-  declare -A pid_to_compositor
-  declare -A pid_to_command
-  declare -A unmapped_sockets
 
   if [[ "${#sockets[@]}" -eq 0 ]]; then
     echo "No active display sockets found."
@@ -262,73 +259,42 @@ run_detection() {
   fi
 
   if [[ "$EUID" -ne 0 ]]; then
-    echo ""
-    echo "Some display sockets may be misclassified due to permission limits."
-    #echo "  Some sockets may not be mapped to a compositor."
+    echo -e "\nSome display sockets may be misclassified due to permission limits."
     echo "  Run with sudo to see full compositor ownership and command details."
   fi
 
-  echo ""
-  echo "Detected display sockets and owning compositors:"
+  # Phase 2: Socket Classification
+  echo -e "\nDetected display sockets and owning compositors:"
   local display_map=()
+
   for sock in "${sockets[@]}"; do
     IFS='|' read -r name path pid compositor cmdline <<< "$(get_socket_info "$sock")"
 
-    #[[ -n "$pid" ]] || continue
-    #pid_to_sockets["$pid"]+="$name "
-    #pid_to_compositor["$pid"]="$compositor"
-    #pid_to_command["$pid"]="$cmdline"
-    #
     if [[ -n "$pid" ]]; then
-      # Append socket name to list (space-separated)
-      if [[ -n "${pid_to_sockets[$pid]}" ]]; then
-        pid_to_sockets["$pid"]+=", $name"
-      else
-        pid_to_sockets["$pid"]="$name"
-      fi
-
-      # Only set compositor/command if not already set
+      # Group by PID
+      pid_to_sockets["$pid"]+="${pid_to_sockets[$pid]:+, }$name"
       [[ -z "${pid_to_compositor[$pid]}" ]] && pid_to_compositor["$pid"]="$compositor"
       [[ -z "${pid_to_command[$pid]}" ]] && pid_to_command["$pid"]="$cmdline"
     else
-      # Optional: track unknown PID sockets
-      pid_to_sockets["(none)"]+=", $name"
-      pid_to_compositor["(none)"]="Unknown"
-      pid_to_command["(none)"]="(none)"
+      # Track unmapped sockets immutably
+      while IFS='=' read -r k v; do
+        unmapped_sockets["$k"]="$v"
+      done < <(add_unmapped_socket "$name" "$path" unmapped_sockets)
     fi
 
-    #if [[ -z "$pid" ]]; then
-    #  unmapped_sockets["$name"]="$path"
-    #  continue
-    #fi
-    #if (( ${#unmapped_sockets[@]} > 0 )); then
-    #  echo -e "\n⚠️  Unmapped display sockets:"
-    #  for name in "${!unmapped_sockets[@]}"; do
-    #    echo "  - $name → ${unmapped_sockets[$name]}"
-    #  done
-    #fi
-    #
-    #if [[ -z "$pid" ]]; then
-    #  # Update map immutably
-    #  while IFS='=' read -r k v; do
-    #    unmapped["$k"]="$v"
-    #  done < <(add_unmapped_socket "$name" "$path" unmapped)
-    #  continue
-    #fi
-
+    # Build display map for ranking
     rank_val=$(get_rank "$compositor")
     display_map+=("$rank_val|$name|$compositor|$pid|$path|$cmdline")
 
+    # Verbose or concise output
     if [[ "$verbose" -eq 1 ]]; then
       echo "  - $name"
       echo "      Path      : $path"
       echo "      PID       : ${pid:-(none)}"
       echo "      Compositor: $compositor"
       echo "      Command   : ${cmdline:-(none)}"
-
       if [[ "$related" -eq 1 ]]; then
         echo "      Related processes:"
-        #get_related_processes "$compositor" | while read -r line; do
         get_related_process_tree "$compositor" "$pid" | while read -r line; do
           echo "        $line"
         done
@@ -338,58 +304,27 @@ run_detection() {
     fi
   done
 
-  #echo -e "\n🧩 Compositor PID Summary:"
-  #for pid in "${!pid_to_sockets[@]}"; do
-  #  if [[ "$verbose" -eq 1 ]]; then
-  #    echo "  $pid → ${pid_to_compositor[$pid]} → ${pid_to_command[$pid]}"
-  #    echo "    Sockets: ${pid_to_sockets[$pid]}"
-  #  else
-  #    echo "  PID $pid (${pid_to_compositor[$pid]}) serves: ${pid_to_sockets[$pid]}"
-  #  fi
-  #done
+  # Phase 3: Unmapped Socket Summary
+  print_unmapped_sockets unmapped_sockets
 
-  for sock in "${sockets[@]}"; do
-    IFS='|' read -r name path pid compositor cmdline <<< "$(get_socket_info "$sock")"
-    if [[ -z "$pid" ]]; then
-      # Update map immutably
-      while IFS='=' read -r k v; do
-        unmapped["$k"]="$v"
-      done < <(add_unmapped_socket "$name" "$path" unmapped)
-      continue
-    fi
-    # ... normal PID mapping logic
-  done
-
-  print_unmapped_sockets unmapped
+  # Phase 4: Compositor PID Summary
   print_pid_summary "$verbose" sockets
 
+  # Phase 5: Ranked Display Output
   if [[ "$rank" -eq 1 ]]; then
-    echo ""
-    echo "Ranked display candidates:"
+    echo -e "\nRanked display candidates:"
     IFS=$'\n' sorted=($(sort <<<"${display_map[*]}"))
     unset IFS
     for entry in "${sorted[@]}"; do
       IFS='|' read -r rank name compositor pid path cmdline <<< "$entry"
-      #if [[ "$color" -eq 1 ]]; then
-      #  name="${FG_CYAN}${name}${RESET}"
-      #  compositor="${FG_MAGENTA}${compositor}${RESET}"
-      #fi
       if [[ "$name" =~ ^X([0-9]+)$ ]]; then
-        #echo "  export DISPLAY=:${BASH_REMATCH[1]}  # $compositor"
-        #echo -e "  export DISPLAY=:${BASH_REMATCH[1]}  # $compositor"
-        if [[ "$color" -eq 1 ]]; then
-          echo -e "  export DISPLAY=${FG_CYAN}:${BASH_REMATCH[1]}${RESET}  # ${FG_MAGENTA}${compositor}${RESET}"
-        else
-          echo "  export DISPLAY=:${BASH_REMATCH[1]}  # $compositor"
-        fi
+        [[ "$color" -eq 1 ]] \
+          && echo -e "  export DISPLAY=${FG_CYAN}:${BASH_REMATCH[1]}${RESET}  # ${FG_MAGENTA}${compositor}${RESET}" \
+          || echo "  export DISPLAY=:${BASH_REMATCH[1]}  # $compositor"
       else
-        #echo "  export DISPLAY=$name  # $compositor"
-        #echo -e "  export DISPLAY=$name  # $compositor"
-        if [[ "$color" -eq 1 ]]; then
-          echo -e "  export DISPLAY=${FG_CYAN}${name}${RESET}  # ${FG_MAGENTA}${compositor}${RESET}"
-        else
-          echo "  export DISPLAY=$name  # $compositor"
-        fi
+        [[ "$color" -eq 1 ]] \
+          && echo -e "  export DISPLAY=${FG_CYAN}${name}${RESET}  # ${FG_MAGENTA}${compositor}${RESET}" \
+          || echo "  export DISPLAY=$name  # $compositor"
       fi
     done
   fi
