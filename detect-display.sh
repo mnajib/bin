@@ -207,6 +207,39 @@ print_pid_summary() {
   done
 }
 
+add_unmapped_socket() {
+  local name="$1"
+  local path="$2"
+  declare -n current_map="$3"
+
+  # Create a copy
+  declare -A updated_map
+  for key in "${!current_map[@]}"; do
+    updated_map["$key"]="${current_map[$key]}"
+  done
+
+  # Add new entry
+  updated_map["$name"]="$path"
+
+  # Print updated map as key=value pairs
+  for key in "${!updated_map[@]}"; do
+    echo "$key=${updated_map[$key]}"
+  done
+}
+
+print_unmapped_sockets() {
+  declare -n socket_map="$1"
+
+  if (( ${#socket_map[@]} > 0 )); then
+    echo -e "\nUnmapped display sockets:"
+    for name in "${!socket_map[@]}"; do
+      echo "  - $name → ${socket_map[$name]}"
+    done
+    echo "    These sockets exist but could not be mapped to a compositor process."
+    echo "    Try running with sudo to see full ownership details."
+  fi
+}
+
 run_detection() {
   local verbose="${1:-0}"
   local rank="${2:-0}"
@@ -221,6 +254,7 @@ run_detection() {
   declare -A pid_to_sockets
   declare -A pid_to_compositor
   declare -A pid_to_command
+  declare -A unmapped_sockets
 
   if [[ "${#sockets[@]}" -eq 0 ]]; then
     echo "No active display sockets found."
@@ -263,6 +297,25 @@ run_detection() {
       pid_to_command["(none)"]="(none)"
     fi
 
+    #if [[ -z "$pid" ]]; then
+    #  unmapped_sockets["$name"]="$path"
+    #  continue
+    #fi
+    #if (( ${#unmapped_sockets[@]} > 0 )); then
+    #  echo -e "\n⚠️  Unmapped display sockets:"
+    #  for name in "${!unmapped_sockets[@]}"; do
+    #    echo "  - $name → ${unmapped_sockets[$name]}"
+    #  done
+    #fi
+    #
+    #if [[ -z "$pid" ]]; then
+    #  # Update map immutably
+    #  while IFS='=' read -r k v; do
+    #    unmapped["$k"]="$v"
+    #  done < <(add_unmapped_socket "$name" "$path" unmapped)
+    #  continue
+    #fi
+
     rank_val=$(get_rank "$compositor")
     display_map+=("$rank_val|$name|$compositor|$pid|$path|$cmdline")
 
@@ -294,6 +347,20 @@ run_detection() {
   #    echo "  PID $pid (${pid_to_compositor[$pid]}) serves: ${pid_to_sockets[$pid]}"
   #  fi
   #done
+
+  for sock in "${sockets[@]}"; do
+    IFS='|' read -r name path pid compositor cmdline <<< "$(get_socket_info "$sock")"
+    if [[ -z "$pid" ]]; then
+      # Update map immutably
+      while IFS='=' read -r k v; do
+        unmapped["$k"]="$v"
+      done < <(add_unmapped_socket "$name" "$path" unmapped)
+      continue
+    fi
+    # ... normal PID mapping logic
+  done
+
+  print_unmapped_sockets unmapped
   print_pid_summary "$verbose" sockets
 
   if [[ "$rank" -eq 1 ]]; then
