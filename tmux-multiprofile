@@ -1,0 +1,247 @@
+#!/usr/bin/env bash
+#==========================================================
+#  tmux-multiprofile.sh
+#  Author: Najib & ChatGPT
+#  Functional Bash-based tmux layout manager (with Maybe monad)
+#==========================================================
+
+#----------------------------
+# Immutable globals
+#----------------------------
+readonly VERSION="1.3.1"
+readonly AUTHOR="Najib"
+readonly APP_NAME="tmux-multiprofile"
+readonly PROFILE_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/${APP_NAME}/profiles"
+readonly DEBUG="${DEBUG:-false}"
+
+#==========================================================
+# PURE FUNCTIONS (no side-effects)
+#==========================================================
+
+#----------------------------
+# Maybe Monad helpers
+#----------------------------
+
+maybe_just() { echo "Just:${1}"; }
+maybe_nothing() { echo "Nothing"; }
+maybe_is_just() { [[ "$1" == Just:* ]]; }
+maybe_from_just() { [[ "$1" == Just:* ]] && echo "${1#Just:}"; }
+
+maybe_bind() {
+  local maybe_value="$1" fn="$2"
+  if maybe_is_just "$maybe_value"; then
+    local val
+    val=$(maybe_from_just "$maybe_value")
+    "$fn" "$val"
+  else
+    maybe_nothing
+  fi
+}
+
+#==========================================================
+# Utility pure functions
+#==========================================================
+
+_pure_debug() {
+  [[ "$DEBUG" == "true" ]] && echo -e "\033[2m[DEBUG]\033[0m $*" >&2
+}
+
+_pure_usage() {
+  cat <<EOF
+Usage:
+  ${APP_NAME} [options] [profile-name]
+
+Options:
+  --help         Show this help message
+  --version      Show version info
+  --about        Show about info
+  --debug        Enable debug messages
+
+Examples:
+  ${APP_NAME} --help
+  ${APP_NAME} logging
+  DEBUG=true ${APP_NAME} sysconfig
+EOF
+}
+
+_pure_version() {
+  echo "${APP_NAME} version ${VERSION}"
+}
+
+_pure_about() {
+  cat <<EOF
+${APP_NAME} — A functional Bash-based tmux layout manager.
+Designed to run *inside an active tmux session*.
+
+Author : ${AUTHOR}
+License: MIT
+Version: ${VERSION}
+
+Features:
+  • Multiple tmux profiles (logging, sysconfig, dev)
+  • Immutable + functional design
+  • Maybe monad error handling
+  • Auto-creates default profiles if missing
+  • User-friendly messages
+EOF
+}
+
+_pure_pretty_list_profiles() {
+  local profiles=()
+  while IFS= read -r line; do
+    profiles+=("$line")
+  done < <(find "$PROFILE_DIR" -type f -name "*.profile" -printf "%f\n" | sed 's/\.profile$//')
+  for p in "${profiles[@]}"; do
+    echo "    - $p"
+  done
+}
+
+#==========================================================
+# Profile management
+#==========================================================
+
+_pure_ensure_profiles() {
+  mkdir -p "$PROFILE_DIR"
+  local created=()
+
+  if [[ ! -f "${PROFILE_DIR}/logging.profile" ]]; then
+    cat > "${PROFILE_DIR}/logging.profile" <<'PROFILE'
+rename-session logging
+rename-window main
+split-window -v -p 50 'htop'
+split-window -h -p 50 'iotop'
+select-pane -t 0
+send-keys 'dmesg -w' C-m
+rename-window monitor
+PROFILE
+    created+=("logging")
+  fi
+
+  if [[ ! -f "${PROFILE_DIR}/sysconfig.profile" ]]; then
+    cat > "${PROFILE_DIR}/sysconfig.profile" <<'PROFILE'
+rename-session sysconfig
+rename-window editor
+split-window -h -p 50
+select-pane -t 0
+send-keys 'cd /etc && nvim' C-m
+select-pane -t 1
+send-keys 'cd ~/.config && nvim' C-m
+rename-window config
+PROFILE
+    created+=("sysconfig")
+  fi
+
+  if [[ ! -f "${PROFILE_DIR}/dev.profile" ]]; then
+    cat > "${PROFILE_DIR}/dev.profile" <<'PROFILE'
+rename-session dev
+rename-window main
+split-window -h -p 50
+select-pane -t 0
+send-keys 'cd ~/src && nvim' C-m
+select-pane -t 1
+send-keys 'cd ~/src && gh repo view' C-m
+rename-window coding
+PROFILE
+    created+=("dev")
+  fi
+
+  if (( ${#created[@]} > 0 )); then
+    echo -e "\033[1;32m✔ Created default profiles:\033[0m ${created[*]}"
+  fi
+}
+
+#==========================================================
+# Validation (returns Maybe)
+#==========================================================
+
+_pure_check_tmux_session() {
+  [[ -z "$TMUX" ]] && maybe_nothing || maybe_just "in-tmux"
+}
+
+_pure_check_profile_exists() {
+  local name="$1"
+  [[ -f "${PROFILE_DIR}/${name}.profile" ]] && maybe_just "${PROFILE_DIR}/${name}.profile" || maybe_nothing
+}
+
+#==========================================================
+# IMPURE ACTIONS
+#==========================================================
+
+_impure_clear_window() {
+  _pure_debug "Clearing all panes in current window..."
+  local panes current
+  panes=$(tmux list-panes -F '#P')
+  current=$(tmux display-message -p '#P')
+  for p in $panes; do
+    [[ "$p" != "$current" ]] && tmux kill-pane -t "$p"
+  done
+}
+
+_impure_apply_profile() {
+  local profile_file="$1"
+  _pure_debug "Applying tmux profile: $profile_file"
+  _impure_clear_window
+  tmux source-file "$profile_file"
+}
+
+#==========================================================
+# Pretty error reporting
+#==========================================================
+
+_impure_error() {
+  local message="$1"
+  echo -e "\n\033[1;31m✖ ERROR:\033[0m ${message}\n" >&2
+  echo -e "    💡 Tip: Run \033[1m${APP_NAME} --help\033[0m for usage help.\n" >&2
+  exit 1
+}
+
+_impure_error_not_in_tmux() {
+  echo -e "\n\033[1;31m✖ ERROR:\033[0m Not inside a tmux session.\n" >&2
+  echo -e "    💡 Tip: Start tmux first with:\n" >&2
+  echo -e "        tmux new -s mysession\n" >&2
+  echo -e "    Then run:\n" >&2
+  echo -e "        ${APP_NAME} logging\n" >&2
+  exit 1
+}
+
+_impure_error_unknown_profile() {
+  local name="$1"
+  echo -e "\n\033[1;31m✖ ERROR:\033[0m Unknown profile: \033[1m${name}\033[0m\n" >&2
+  echo -e "    💡 Available profiles:\n" >&2
+  _pure_pretty_list_profiles >&2
+  echo >&2
+  exit 1
+}
+
+#==========================================================
+# MAIN ENTRYPOINT
+#==========================================================
+
+_main() {
+  local arg="$1"
+
+  case "$arg" in
+    --help|"") _pure_usage ;;
+    --version) _pure_version ;;
+    --about) _pure_about ;;
+    --debug) shift; DEBUG="true"; _main "$@" ;;
+    *)
+      _pure_ensure_profiles
+
+      local tmux_check=$(_pure_check_tmux_session)
+      maybe_is_just "$tmux_check" || _impure_error_not_in_tmux
+
+      local maybe_profile=$(_pure_check_profile_exists "$arg")
+      if maybe_is_just "$maybe_profile"; then
+        local profile_file
+        profile_file=$(maybe_from_just "$maybe_profile")
+        _impure_apply_profile "$profile_file"
+      else
+        _impure_error_unknown_profile "$arg"
+      fi
+      ;;
+  esac
+}
+
+_main "$@"
+
