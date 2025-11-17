@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
 # qcow2-overlay.sh
-# Version 1.1.0
+# Version 1.3.0
 
 set -euo pipefail
 
 SCRIPT_NAME=$(basename "$0")
-VERSION="1.1.0"
+VERSION="1.3.0"
 DEBUG=0
 LOG_FILE=""
+
+RED="\e[31m"
+RESET="\e[0m"
 
 log() {
     local msg="$1"
@@ -25,6 +28,7 @@ Usage: $SCRIPT_NAME [OPTIONS] <paths/files>
 Options:
   --list-overlay <dir/file>    List one-level overlay of .qcow2 files
   --create-overlay <file>      Create a new overlay image
+  --fix <dir/file>             Fix self-pointing overlays
   --test                       Run internal tests
   --help                       Show this help message
   --version                    Show script version
@@ -42,13 +46,12 @@ get_base_image() {
     local base
     base=$(qemu-img info --output=json "$file" 2>/dev/null | jq -r '.["backing-filename"] // empty' || true)
 
-    # Detect self-pointing overlays
     local abs_file abs_base
     abs_file=$(readlink -f "$file")
     abs_base=$(readlink -f "$base" 2>/dev/null || true)
     if [[ "$abs_base" == "$abs_file" ]]; then
         debug "Detected self-pointing overlay: $file"
-        base=""
+        base="SELFPOINTING"
     fi
 
     echo "$base"
@@ -56,6 +59,7 @@ get_base_image() {
 
 list_overlay() {
     local paths=("$@")
+    local self_pointing_files=()
 
     for path in "${paths[@]}"; do
         local files=()
@@ -72,14 +76,15 @@ list_overlay() {
             local base
             base=$(get_base_image "$f" || true)
 
-            # Determine log file location if not set
-            if [[ -z "$LOG_FILE" ]]; then
-                LOG_FILE="$(dirname "$f")/qcow2-helper.log"
-            fi
+            [[ -z "$LOG_FILE" ]] && LOG_FILE="$(dirname "$f")/qcow2-helper.log"
 
-            f_name=$(basename "$f")
-            if [[ -n "$base" ]]; then
-                base_name=$(basename "$base")
+            local f_name=$(basename "$f")
+            if [[ "$base" == "SELFPOINTING" ]]; then
+                echo -e "${RED}${f_name} <-> ${f_name}${RESET}"
+                self_pointing_files+=("$f_name")
+                echo "$(date '+%Y-%m-%d %H:%M:%S') ${f_name} <-> ${f_name}" >> "$LOG_FILE"
+            elif [[ -n "$base" ]]; then
+                local base_name=$(basename "$base")
                 echo "$f_name -> $base_name"
                 echo "$(date '+%Y-%m-%d %H:%M:%S') $f_name -> $base_name" >> "$LOG_FILE"
             else
@@ -88,30 +93,69 @@ list_overlay() {
             fi
         done
     done
+
+    if [[ ${#self_pointing_files[@]} -gt 0 ]]; then
+        echo -e "\n${RED}Warning:${RESET} Detected self-pointing overlays: ${self_pointing_files[*]}"
+    fi
 }
 
 create_overlay() {
     local src="$1"
 
-    if [[ ! -f "$src" ]]; then
-        echo "File does not exist: $src"
-        exit 1
-    fi
-
-    if [[ -z "$LOG_FILE" ]]; then
-        LOG_FILE="$(dirname "$src")/qcow2-helper.log"
-    fi
+    [[ ! -f "$src" ]] && { echo "File does not exist: $src"; exit 1; }
+    [[ -z "$LOG_FILE" ]] && LOG_FILE="$(dirname "$src")/qcow2-helper.log"
 
     local dir=$(dirname "$src")
     local base=$(basename "$src")
     local tmp_name="${base}.bak"
     local new_overlay="${base}"
 
+    local abs_src abs_backing
+    abs_src=$(readlink -f "$src")
+    abs_backing=$(qemu-img info --output=json "$src" 2>/dev/null | jq -r '.["backing-filename"] // empty' || true)
+    abs_backing=$(readlink -f "$abs_backing" 2>/dev/null || true)
+
+    if [[ "$abs_src" == "$abs_backing" ]]; then
+        log "Detected self-pointing overlay: $src. Renaming original to $tmp_name"
+        mv "$src" "$dir/$tmp_name"
+        src="$dir/$tmp_name"
+    fi
+
     log "Creating overlay for $src"
-    mv "$src" "$dir/$tmp_name"
-    # Specify backing format explicitly
-    qemu-img create -f qcow2 -b "$dir/$tmp_name" -F qcow2 "$dir/$new_overlay"
-    log "Overlay created: $new_overlay (base: $tmp_name)"
+    qemu-img create -f qcow2 -b "$src" -F qcow2 "$dir/$new_overlay"
+    log "Overlay created: $new_overlay (base: $src)"
+}
+
+fix_self_pointing() {
+    local paths=("$@")
+    local fixed=()
+
+    for path in "${paths[@]}"; do
+        local files=()
+        if [[ -d "$path" ]]; then
+            mapfile -t files < <(find "$path" -maxdepth 1 -type f -name '*.qcow2' | sort)
+        elif [[ -f "$path" ]]; then
+            files=("$path")
+        else
+            echo "Skipping invalid path: $path"
+            continue
+        fi
+
+        for f in "${files[@]}"; do
+            local base
+            base=$(get_base_image "$f")
+            if [[ "$base" == "SELFPOINTING" ]]; then
+                create_overlay "$f"
+                fixed+=("$(basename "$f")")
+            fi
+        done
+    done
+
+    if [[ ${#fixed[@]} -gt 0 ]]; then
+        echo -e "\nFixed self-pointing overlays: ${fixed[*]}"
+    else
+        echo "No self-pointing overlays detected."
+    fi
 }
 
 run_tests() {
@@ -123,15 +167,12 @@ run_tests() {
     local base="$tmp_dir/base.qcow2"
     local overlay="$tmp_dir/overlay.qcow2"
 
-    # Create base image
     qemu-img create -f qcow2 "$base" 10M
     echo "Created base image: $base"
 
-    # Create overlay with explicit backing format
     qemu-img create -f qcow2 -b "$base" -F qcow2 "$overlay"
     echo "Created overlay image: $overlay -> $base"
 
-    # Test list_overlay on temp dir
     echo "Test list overlay output:"
     list_overlay "$tmp_dir"
 
@@ -157,6 +198,12 @@ while [[ $# -gt 0 ]]; do
             shift
             [[ $# -eq 0 ]] && { echo "--create-overlay requires a file"; exit 1; }
             create_overlay "$1"
+            exit 0
+            ;;
+        --fix)
+            shift
+            [[ $# -eq 0 ]] && { echo "--fix requires a path"; exit 1; }
+            fix_self_pointing "$@"
             exit 0
             ;;
         --test)
