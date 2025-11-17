@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# qcow2-helper.sh
-# Version 1.0.0
+# qcow2-overlay.sh
+# Version 1.1.0
 
 set -euo pipefail
 
 SCRIPT_NAME=$(basename "$0")
-VERSION="1.0.0"
+VERSION="1.1.0"
 DEBUG=0
 LOG_FILE=""
 
@@ -25,6 +25,7 @@ Usage: $SCRIPT_NAME [OPTIONS] <paths/files>
 Options:
   --list-overlay <dir/file>    List one-level overlay of .qcow2 files
   --create-overlay <file>      Create a new overlay image
+  --test                       Run internal tests
   --help                       Show this help message
   --version                    Show script version
   --debug                      Enable debug output
@@ -37,8 +38,19 @@ get_base_image() {
     if [[ ! -f "$file" ]]; then
         return
     fi
+
     local base
     base=$(qemu-img info --output=json "$file" 2>/dev/null | jq -r '.["backing-filename"] // empty' || true)
+
+    # Detect self-pointing overlays
+    local abs_file abs_base
+    abs_file=$(readlink -f "$file")
+    abs_base=$(readlink -f "$base" 2>/dev/null || true)
+    if [[ "$abs_base" == "$abs_file" ]]; then
+        debug "Detected self-pointing overlay: $file"
+        base=""
+    fi
+
     echo "$base"
 }
 
@@ -69,11 +81,9 @@ list_overlay() {
             if [[ -n "$base" ]]; then
                 base_name=$(basename "$base")
                 echo "$f_name -> $base_name"
-                # Only log to file, not stdout
                 echo "$(date '+%Y-%m-%d %H:%M:%S') $f_name -> $base_name" >> "$LOG_FILE"
             else
                 echo "$f_name"
-                # Only log to file, not stdout
                 echo "$(date '+%Y-%m-%d %H:%M:%S') $f_name" >> "$LOG_FILE"
             fi
         done
@@ -88,7 +98,6 @@ create_overlay() {
         exit 1
     fi
 
-    # Determine log file location
     if [[ -z "$LOG_FILE" ]]; then
         LOG_FILE="$(dirname "$src")/qcow2-helper.log"
     fi
@@ -100,8 +109,34 @@ create_overlay() {
 
     log "Creating overlay for $src"
     mv "$src" "$dir/$tmp_name"
-    qemu-img create -f qcow2 -b "$dir/$tmp_name" "$dir/$new_overlay"
+    # Specify backing format explicitly
+    qemu-img create -f qcow2 -b "$dir/$tmp_name" -F qcow2 "$dir/$new_overlay"
     log "Overlay created: $new_overlay (base: $tmp_name)"
+}
+
+run_tests() {
+    echo "Running internal tests..."
+    local tmp_dir
+    tmp_dir=$(mktemp -d)
+    echo "Using temp dir: $tmp_dir"
+
+    local base="$tmp_dir/base.qcow2"
+    local overlay="$tmp_dir/overlay.qcow2"
+
+    # Create base image
+    qemu-img create -f qcow2 "$base" 10M
+    echo "Created base image: $base"
+
+    # Create overlay with explicit backing format
+    qemu-img create -f qcow2 -b "$base" -F qcow2 "$overlay"
+    echo "Created overlay image: $overlay -> $base"
+
+    # Test list_overlay on temp dir
+    echo "Test list overlay output:"
+    list_overlay "$tmp_dir"
+
+    echo "Tests completed."
+    rm -rf "$tmp_dir"
 }
 
 # --- Parse CLI ---
@@ -122,6 +157,10 @@ while [[ $# -gt 0 ]]; do
             shift
             [[ $# -eq 0 ]] && { echo "--create-overlay requires a file"; exit 1; }
             create_overlay "$1"
+            exit 0
+            ;;
+        --test)
+            run_tests
             exit 0
             ;;
         --help)
