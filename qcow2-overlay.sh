@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# qcow2-overlay.sh (proper Maybe, clean args, overlay checks, consistent pure/impure separation)
+# qcow2-overlay.sh (Maybe + logging + dry-run + safe fix with restore on failure)
 set -euo pipefail
 
 # ==========================================
@@ -126,6 +126,7 @@ qcow2_create_overlay_maybe() {
     maybe_safe qcow2_create_overlay "$@"
 }
 
+# ---------- SAFER self-overlay fix ----------
 fix_self_overlay() {
     # fix_self_overlay <file> [dry_run]
     local file="$1"
@@ -136,16 +137,32 @@ fix_self_overlay() {
 
     if [[ "$(_is_self_overlay_pure "$file" "$backing")" == true ]]; then
         local bak="${file}.bak"
+
         if [[ "$dry_run" == "true" ]]; then
             log_info "[DRY-RUN] SELF: rename $file → $bak, recreate overlay"
-        else
-            mv "$file" "$bak"
-            qcow2_create_overlay_maybe "$bak" "$file" false >/dev/null || true
-            log_info "Fixed self-overlay: $file"
+            return 0
         fi
+
+        # move original to backup
+        mv "$file" "$bak"
+        # attempt to create overlay; capture Maybe result
+        local result
+        result=$(qcow2_create_overlay_maybe "$bak" "$file" false) || result="$result"
+
+        if [[ "$result" == Nothing:* ]]; then
+            # restore original on failure
+            log_error "Failed to recreate overlay for $file; restoring backup"
+            mv "$bak" "$file"
+            return 1
+        fi
+
+        log_info "Fixed self-overlay: $file"
+    else
+        log_info "No self-overlay detected: $file"
     fi
 }
 
+# ---------- SAFER cycle fix ----------
 fix_cycles() {
     # fix_cycles <file1> <file2> ... <dry_run_flag>
     local files=("$@")
@@ -168,13 +185,24 @@ fix_cycles() {
 
     for f in "${cycles[@]}"; do
         local bak="${f}.bak"
+
         if [[ "$dry_run" == "true" ]]; then
             log_info "[DRY-RUN] CYCLE: rename $f → $bak, recreate overlay"
-        else
-            mv "$f" "$bak"
-            qcow2_create_overlay_maybe "$bak" "$f" false >/dev/null || true
-            log_info "Fixed cycle: $f"
+            continue
         fi
+
+        mv "$f" "$bak"
+        local result
+        result=$(qcow2_create_overlay_maybe "$bak" "$f" false) || result="$result"
+
+        if [[ "$result" == Nothing:* ]]; then
+            log_error "Failed to recreate overlay for $f; restoring backup"
+            mv "$bak" "$f"
+            # continue to next cycle; do not abort entire run
+            continue
+        fi
+
+        log_info "Fixed cycle: $f"
     done
 }
 
@@ -241,7 +269,6 @@ unit_test() {
     qcow2_create_overlay_maybe "$base" "$overlay" false
 
     log_info "- create self-overlay test (backing_fmt explicit)"
-    # include backing_fmt explicitly (avoid "Detected format" warnings)
     qemu-img create -f qcow2 -o backing_file="$self",backing_fmt="qcow2" "$self.tmp" >/dev/null 2>/dev/null || true
     fix_self_overlay "$self.tmp" true
 
@@ -292,7 +319,6 @@ main() {
             fix_self_overlay "$1" false
             ;;
         --fix-cycles)
-            # pass all files and explicit dry_run flag=false
             if [[ $# -lt 1 ]]; then
                 log_error "--fix-cycles requires at least one file"
                 exit 1
@@ -321,17 +347,9 @@ main() {
                     ;;
             esac
             ;;
-        --test)
-            unit_test
-            ;;
-        --help|-h)
-            usage
-            ;;
-        *)
-            log_error "Unknown option: $cmd"
-            usage
-            exit 1
-            ;;
+        --test) unit_test ;;
+        --help|-h) usage ;;
+        *) log_error "Unknown option: $cmd"; usage; exit 1 ;;
     esac
 }
 
