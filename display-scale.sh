@@ -5,7 +5,7 @@
 # Description: Toggles or sets display scale (zoom-out) using xrandr.
 
 # --- Configuration (Pure Data - Immutable) ---
-readonly SCRIPT_VERSION="7.0.0"
+readonly SCRIPT_VERSION="7.1.0"
 readonly SCRIPT_NAME=$(basename "$0")
 readonly NORMAL_SCALE="1x1"
 readonly NORMAL_SCALE_FLOAT="1.0"
@@ -20,6 +20,7 @@ declare -rA SCALE_FACTORS=(
 # --- Globals (Mutable during parsing, then Immutable) ---
 VERBOSE=0
 DEBUG=0
+DRYRUN=0
 COMMAND=""      # Will store: "scale", "toggle", "reset", "test", "help", "version"
 SCALE_LEVEL=""  # Will store: "75", "55", "0"
 
@@ -38,6 +39,8 @@ log() {
     elif [ "$level" == "VERBOSE" ] && [ "$VERBOSE" -eq 1 ]; then
         echo "[INFO] $message" >&2
     elif [ "$level" == "INFO" ] || [ "$level" == "ERROR" ]; then
+        echo "[$level] $message" >&2
+    elif [ "$level" == "DRYRUN" ]; then
         echo "[$level] $message" >&2
     fi
 }
@@ -59,7 +62,7 @@ normalize_scale() {
 detect_output() {
     local output
     output=$(xrandr | awk '/ connected / {print $1; exit}')
-    
+
     if [ -z "$output" ]; then
         log "ERROR" "No connected display output found. Cannot proceed." >&2
         return 1
@@ -76,20 +79,20 @@ get_current_scale() {
     local scale
 
     scale=$(xrandr --verbose | awk '
-        /^\t'"$output_name"'/ { in_output=1; next } 
-        /Transform:/ { 
-            getline; 
-            print $1; 
-            exit 
+        /^\t'"$output_name"'/ { in_output=1; next }
+        /Transform:/ {
+            getline;
+            print $1;
+            exit
         }
     ')
-    
+
     if [ -z "$scale" ]; then
         log "DEBUG" "Scale detection failed. Assuming $NORMAL_SCALE_FLOAT" >&2
         echo "$NORMAL_SCALE_FLOAT"
-        return 0 
+        return 0
     fi
-    
+
     log "DEBUG" "Current raw X-scale detected: $scale"
     echo "$scale"
     return 0
@@ -101,14 +104,18 @@ set_scale() {
     local output="$1"
     local scale_factor="$2"
     log "INFO" "Applying scale $scale_factor to $output." >&2
-    
-    xrandr --output "$output" --scale "$scale_factor"
-    local exit_code=$?
-    
-    if [ "$exit_code" -ne 0 ]; then
-        log "ERROR" "Failed to apply scale $scale_factor. xrandr exit code: $exit_code." >&2
-        return 1
+
+    if [ $DRYRUN -ne 1 ]; then
+      xrandr --output "$output" --scale "$scale_factor"
+      local exit_code=$?
+      if [ "$exit_code" -ne 0 ]; then
+          log "ERROR" "Failed to apply scale $scale_factor. xrandr exit code: $exit_code." >&2
+          return 1
+      fi
+    else
+      log "DRYRUN" "xrandr --output \"$output\" --scale \"$scale_factor\""
     fi
+
     log "DEBUG" "xrandr command succeeded." >&2
     return 0
 }
@@ -120,7 +127,7 @@ set_scale() {
 run_tests() {
     log "INFO" "Running internal unit tests..."
     local failures=0
-    
+
     local input="1.8182x1.8182"
     local expected="1.8182"
     local actual=$(normalize_scale "$input")
@@ -141,9 +148,9 @@ run_tests() {
         log "ERROR" "TEST 2 (Pure - Float comparison): FAIL"
         failures=$((failures + 1))
     fi
-    
+
     log "INFO" "Tests complete. Total Failures: $failures"
-    
+
     if [ "$failures" -gt 0 ]; then
         return 1
     fi
@@ -188,7 +195,7 @@ handle_toggle() {
         print_usage
         exit 1
     fi
-    
+
     local output
     output=$(detect_output)
     if [ $? -ne 0 ]; then exit 1; fi
@@ -199,7 +206,7 @@ handle_toggle() {
 
     local target_x_scale
     target_x_scale=$(normalize_scale "$target_scale")
-    
+
     local is_target
     is_target=$(echo "scale=5; diff = $current_x_scale - $target_x_scale; if (diff < 0) diff = -diff; if (diff < 0.0001) print 1 else print 0" | bc)
 
@@ -238,6 +245,7 @@ DESCRIPTION:
 OPTIONS (can be placed anywhere in the command):
   --verbose     Show execution steps and output detection
   --debug       Show verbose output plus low-level command details
+  --dryrun      Do not run the actual command, just print it
   --help        Display this help message
   --version     Display the script version
 
@@ -311,6 +319,10 @@ parse_arguments() {
                 VERBOSE=1
                 shift
                 ;;
+            --dryrun)
+                DRYRUN=1
+                shift
+                ;;
             --version)
                 COMMAND="version"
                 shift
@@ -358,7 +370,7 @@ parse_arguments() {
                 ;;
         esac
     done
-    
+
     # Validation
     if [ -z "$COMMAND" ]; then
         log "ERROR" "No command specified"
@@ -382,6 +394,7 @@ parse_arguments "$@"
 # PHASE 2: Enforce immutability
 readonly VERBOSE
 readonly DEBUG
+readonly DRYRUN
 readonly COMMAND
 readonly SCALE_LEVEL
 
