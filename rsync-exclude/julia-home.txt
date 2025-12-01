@@ -19,3 +19,21 @@ Downloads/*.tar.gz
 Downloads/Telegram Desktop
 ./local/share/TelegramDesktop/tdata/user_data/cache
 ./local/share/TelegramDesktop/tdata/user_data/media_cache
+
+# Google Chrome heavy caches
+.config/google-chrome/*/Cache/
+.config/google-chrome/*/Code Cache/
+.config/google-chrome/*/GPUCache/
+.config/google-chrome/*/Service Worker/CacheStorage/
+.config/google-chrome/*/Service Worker/ScriptCache/
+.config/google-chrome/*/Safe Browsing/
+.config/google-chrome/*/Crash Reports/
+#
+# Optional if want a very small backup:
+#.config/google-chrome/*/Extensions/*/Temp*
+# Note: Do NOT exclude the entire Extensions/ directory unless you want Chrome to re-download all your extensions.
+#.config/google-chrome/*/Extensions/*
+#
+# WebApp / PWA heavy storage
+#.config/google-chrome/*/IndexedDB/
+#.config/google-chrome/*/File System/
