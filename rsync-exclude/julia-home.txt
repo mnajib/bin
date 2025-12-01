@@ -1,0 +1,21 @@
+# Cache dirs
+.cache
+.snapshots
+.Mozilla
+.VSCodium
+
+# Temporary files
+*.tmp
+*.iso
+
+# System or machine-specific
+Downloads/*.tar.gz
+
+# local share
+./local/share/Trash
+./local/share/qutebrowser/webengine
+
+# Telegram
+Downloads/Telegram Desktop
+./local/share/TelegramDesktop/tdata/user_data/cache
+./local/share/TelegramDesktop/tdata/user_data/media_cache
