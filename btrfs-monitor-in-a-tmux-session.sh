@@ -212,6 +212,37 @@ create_tmux_window() {
 
     [[ -n "$index" ]] && Just "$index" || Nothing
 }
+# Safe: Create tmux window and return its index
+# Usage: create_tmux_window <session> <window_name>
+_create_tmux_window() {
+    local session="$1" name="$2"
+
+    # Create window and capture output
+    local output
+    output=$(tmux new-window -d -P -t "$session" -n "$name" "echo 'Initializing...'")
+    local status=$?
+
+    if [[ $status -ne 0 ]]; then
+        error "Failed to create window: tmux new-window returned $status"
+        return 1
+    fi
+
+    # Parse window index from output (format: [session]:index)
+    local index
+    debug "create_tmux_window: output='$output'"
+    #index=$(echo "$output" | awk -F: '{print $2}' | tr -d ']')
+    #index=$(echo "$output" | awk -F[:.] '{print $2}')
+    index="$output"
+    debug "create_tmux_window: index='$index'"
+
+    if [[ -z "$index" ]]; then
+        error "Failed to parse window index from tmux output: '$output'"
+        return 1
+    fi
+
+    debug "create_tmux_window: Created window '$name' with index '$index'"
+    Just "$index"
+}
 
 # Safe: Create pane
 create_tmux_pane() {
@@ -370,6 +401,86 @@ create_summary_window() {
     debug "create_summary_window: End"
 }
 
+# Create pane layout (pure functional style)
+create_pane_layout() {
+    local session="$1"
+    local window_index="$2"
+    local mount_point="$3"
+
+    # Create panes in a functional way
+    create_tmux_pane "$session" "$window_index" "-h" "1" &&
+    create_tmux_pane "$session" "$window_index" "-v" "1" &&
+    create_tmux_pane "$session" "$window_index" "-v" "2" || return 1
+
+    # Configure panes functionally
+    for pane_index in {1..4}; do
+        # Get pane properties purely
+        local pane_target="${window_index}.${pane_index}"
+        local pane_title
+        pane_title=$(get_pane_title "$pane_index") || continue
+        local pane_cmd
+        pane_cmd=$(get_pane_command "$pane_index" "$mount_point") || continue
+
+        # Create refresh command purely
+        local refresh_cmd="while true; do clear; $pane_cmd; sleep 5; done"
+
+        # Effectful operations with error handling
+        send_tmux_keys "$session" "$pane_target" "clear" &&
+        send_tmux_keys "$session" "$pane_target" "$refresh_cmd" &&
+        set_pane_title "$session" "$pane_target" "$pane_title" || {
+            error "Failed to configure pane $pane_target"
+            continue
+        }
+    done
+
+    return 0
+}
+
+# Create filesystem monitoring window for each mount point (functional style)
+_create_filesystem_window() {
+    local session="$1"
+    shift
+    local mount_points=("$@")
+
+    # Pure: Return if no mount points
+    [[ ${#mount_points[@]} -eq 0 ]] && {
+        warn "No Btrfs mount points found"
+        return 1
+    }
+
+    # Pure: Log initial state (immutable)
+    debug "create_filesystem_window: session='${session}', mount_points_count='${#mount_points[@]}', mount_points='${mount_points[*]}'"
+
+    # Process each mount point immutably
+    for mount_point in "${mount_points[@]}"; do
+        [[ -z "$mount_point" ]] && continue
+
+        # Pure: Generate window name immutably
+        local base_window_name
+        base_window_name=$(generate_window_name "$mount_point") || {
+            error "generate_window_name failed for: $mount_point"
+            continue
+        }
+        local window_name="FS-${base_window_name}"
+
+        # Effectful: Create window
+        local window_index
+        window_index=$(create_tmux_window "$session" "$window_name") || {
+            error "create_tmux_window failed for: $window_name"
+            continue
+        }
+        debug "create_filesystem_window: window_index='$window_index'"
+
+        # Effectful: Create pane layout
+        create_pane_layout "$session" "$window_index" "$mount_point" || {
+            error "Failed to create pane layout for $window_name"
+            continue
+        }
+    done
+
+    return 0
+}
+#
 # Create filesystem monitoring window for each mount point
 create_filesystem_window() {
     local session="$1"
@@ -615,3 +726,4 @@ main() {
 if ! main "${args[@]}"; then  # Note: use "${args[@]}" instead of "$@"
   exit 1
 fi
+
