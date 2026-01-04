@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Wrapper for Neovide using Kickstart configuration
+
+export NVIM_APPNAME=nvim-kick
+exec neovide "$@"
+

@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Launch Neovide with LazyVim configuration
+
+export NVIM_APPNAME=nvim-lazyvim
+
+# Optional GUI preferences
+export NEOVIDE_MULTIGRID=true
+export NEOVIDE_TRANSPARENCY=0.9
+export NEOVIDE_CURSOR_ANIMATION_LENGTH=0.05
+export NEOVIDE_FRAME=none
+
+exec neovide "$@"

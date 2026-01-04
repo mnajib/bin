@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Wrapper for Neovide using NvChad configuration
+
+export NVIM_APPNAME=nvim-nvchad
+exec neovide "$@"
+

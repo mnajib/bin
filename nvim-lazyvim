@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Wrapper for CLI Neovim using NvChad configuration
+
+export NVIM_APPNAME=nvim-lazyvim
+exec nvim "$@"
+
