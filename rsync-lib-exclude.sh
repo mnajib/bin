@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# ~/bin/rsync-lib-exclude.sh
 # Pure functions only — no IO.
 # Haskell-style naming, small reusable functions.
 
