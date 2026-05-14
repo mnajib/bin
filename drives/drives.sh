@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# drives.sh - v3.3 generalized drive inventory tool (fix ZFS pipeline + jq robustness + UX stability)
+# drives.sh - v3.5 generalized drive inventory tool (UX polish + strict filtering + stable output)
 
 set -euo pipefail
 
@@ -40,7 +40,16 @@ collect_zpool_devices_json() {
 # =========================================================
 
 jq_disks_only() {
-  jq '.blockdevices[] | select(.type == "disk")'
+  # strict physical disk filter:
+  # - only type=disk
+  # - exclude obvious virtual devices (loop, zram, etc)
+  jq '
+    .blockdevices[]
+    | select(
+        .type == "disk"
+        and (.name | test("^(sd|nvme|vd|xvd|hd)") )
+      )
+  '
 }
 
 jq_filter_transport() {
@@ -51,7 +60,6 @@ jq_filter_transport() {
 jq_enrich_zpool() {
   local zpool_json="$1"
 
-  # ensure safe JSON array
   [[ -z "$zpool_json" ]] && zpool_json='[]'
 
   jq --argjson zp "$zpool_json" '
@@ -69,7 +77,8 @@ jq_to_table() {
       .size,
       .model,
       .serial,
-      (.in_zpool // false)
+      (.in_zpool // false),
+      .path
     ] | @tsv
   '
 }
@@ -80,6 +89,11 @@ jq_to_table() {
 
 render_table() {
   column -t -s $'\t'
+}
+
+print_header() {
+  echo -e "NAME\tTRAN\tSIZE\tMODEL\tSERIAL\tZPOOL\tPATH" | column -t -s $'\t'
+  printf '%*s\n' 100 '' | tr ' ' '-'
 }
 
 section() {
@@ -116,6 +130,8 @@ cmd_list() {
   data="$(collect_lsblk_json)"
   zpool_json="$(collect_zpool_devices_json)"
 
+  print_header
+
   echo "$data" \
     | jq_disks_only \
     | jq_enrich_zpool "$zpool_json" \
@@ -137,6 +153,8 @@ cmd_unused() {
 
   data="$(collect_lsblk_json)"
   zpool_json="$(collect_zpool_devices_json)"
+
+  print_header
 
   echo "$data" \
     | jq_disks_only \
