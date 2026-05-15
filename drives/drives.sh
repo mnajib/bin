@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# drives.sh - v3.8.1 generalized drive inventory tool (robust output + safer filtering + typo UX fix)
+# drives.sh - v3.8.2 generalized drive inventory tool (improved CLI UX: version + strict option validation)
 
 set -euo pipefail
 
@@ -7,6 +7,7 @@ set -euo pipefail
 # CONFIG
 # =========================================================
 
+readonly VERSION="3.8.2"
 readonly LSBLK_COLUMNS="NAME,KNAME,PATH,TYPE,SIZE,MODEL,SERIAL,VENDOR,TRAN,FSTYPE,MOUNTPOINT"
 
 # =========================================================
@@ -18,7 +19,7 @@ GLOBAL_HUMAN="0"
 ARGS=()
 
 # =========================================================
-# HELP
+# HELP / VERSION
 # =========================================================
 
 print_help() {
@@ -30,6 +31,7 @@ Global options:
   --human                 human readable sizes
   --transport TYPE        filter by usb|sata|nvme
   -h, --help              show this help
+  --version               show version
 
 Commands:
   list        show drives (default)
@@ -46,6 +48,10 @@ Examples:
 EOF
 }
 
+print_version() {
+  echo "drives.sh version $VERSION"
+}
+
 # =========================================================
 # ARG PARSER
 # =========================================================
@@ -59,6 +65,10 @@ parse_args() {
         print_help
         exit 0
         ;;
+      --version)
+        print_version
+        exit 0
+        ;;
       --human)
         GLOBAL_HUMAN="1"
         shift
@@ -66,6 +76,11 @@ parse_args() {
       --transport)
         GLOBAL_TRANSPORT="$2"
         shift 2
+        ;;
+      --*)
+        echo "Unknown option: $1"
+        echo "Run: drives.sh --help"
+        exit 1
         ;;
       *)
         ARGS+=("$1")
@@ -75,13 +90,6 @@ parse_args() {
   done
 
   [[ ${#ARGS[@]} -eq 0 ]] && ARGS=("list")
-
-  # UX FIX: detect flag-like garbage commands
-  if [[ "${ARGS[0]}" == --* ]]; then
-    echo "Invalid command: ${ARGS[0]}"
-    echo "Run: drives.sh --help"
-    exit 1
-  fi
 }
 
 # =========================================================
@@ -113,7 +121,6 @@ collect_zpool_devices_json() {
 # =========================================================
 
 jq_disks_only() {
-  # SAFER: include all common block disk families
   jq '
     .blockdevices[]
     | select(
@@ -200,7 +207,6 @@ cmd_list() {
     | { [[ "$GLOBAL_HUMAN" == "1" ]] && humanize_sizes || cat; } \
     | render_table
 
-  # UX FIX: empty output guard
   if [[ "$GLOBAL_HUMAN" == "1" && -z "$data" ]]; then
     echo "No drives found (lsblk returned empty)."
   fi
