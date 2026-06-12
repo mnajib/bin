@@ -13,6 +13,10 @@ section() {
   echo "-------------------------------------------------------------------------"
 }
 
+list_drives_by_path() {
+  ls -1 /dev/disk/by-path | grep -v -- -part | sort
+}
+
 list_ata_by_id() {
   ls -1 /dev/disk/by-id/ata-* | grep -v -- -part | sort
 }
@@ -70,6 +74,9 @@ list_drives_in_zpool_map_to_sdx() {
 # ----------------------------
 # Output sections (impure)
 # ----------------------------
+
+section "Drives by path"
+list_drives_by_path
 
 section "Drives by connection"
 lsscsi -g
