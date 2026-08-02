@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+
+TAGDB=".tagdb"
+FILEMAP="$TAGDB/files"
+TAGMAP="$TAGDB/tags"
+
+init() {
+    mkdir -p "$FILEMAP" "$TAGMAP"
+    echo "Tag database initialized."
+}
+
+ensure_db() {
+    [[ -d "$TAGDB" ]] || init
+}
+
+add_tag() {
+    local file="$1"
+    local tag="$2"
+
+    ensure_db
+    
+    [[ -e "$file" ]] || { echo "File '$file' not found."; exit 1; }
+
+    # file → tag
+    mkdir -p "$FILEMAP"
+    touch "$FILEMAP/$file.tags"
+    if ! grep -qx "$tag" "$FILEMAP/$file.tags"; then
+        echo "$tag" >> "$FILEMAP/$file.tags"
+    fi
+
+    # tag → file
+    mkdir -p "$TAGMAP"
+    touch "$TAGMAP/$tag.list"
+    if ! grep -qx "$file" "$TAGMAP/$tag.list"; then
+        echo "$file" >> "$TAGMAP/$tag.list"
+    fi
+
+    echo "Tagged '$file' with '$tag'."
+}
+
+remove_tag() {
+    local file="$1"
+    local tag="$2"
+
+    ensure_db
+
+    [[ -e "$FILEMAP/$file.tags" ]] || { echo "File has no tags."; exit 1; }
+
+    sed -i "/^$tag$/d" "$FILEMAP/$file.tags"
+    sed -i "/^$file$/d" "$TAGMAP/$tag.list"
+
+    echo "Removed tag '$tag' from '$file'."
+}
+
+list_file_tags() {
+    local file="$1"
+    [[ -f "$FILEMAP/$file.tags" ]] && cat "$FILEMAP/$file.tags" || echo "(no tags)"
+}
+
+list_all_tags() {
+    echo "Tags:"
+    ls "$TAGMAP" | sed 's/\.list//'
+}
+
+find_by_tags_any() {     # OR search
+    ensure_db
+    echo "Files with ANY of the tags:"
+    for tag in "$@"; do
+        [[ -f "$TAGMAP/$tag.list" ]] && cat "$TAGMAP/$tag.list"
+    done | sort -u
+}
+
+find_by_tags_all() {     # AND search
+    ensure_db
+    local temp=$(mktemp)
+
+    # start with first tag
+    if [[ ! -f "$TAGMAP/$1.list" ]]; then
+        echo "(no matches)"
+        return
+    fi
+
+    cp "$TAGMAP/$1.list" "$temp"
+    shift
+
+    # intersect with each next tag
+    for tag in "$@"; do
+        if [[ ! -f "$TAGMAP/$tag.list" ]]; then
+            echo "(no matches)"
+            rm "$temp"
+            return
+        fi
+        grep -Fx -f "$TAGMAP/$tag.list" "$temp" > "$temp.new"
+        mv "$temp.new" "$temp"
+    done
+
+    cat "$temp"
+    rm "$temp"
+}
+
+show_help() {
+cat <<EOF
+Usage: filetags <command> [args]
+
+Commands:
+  init                        Initialize tag DB
+  add <file> <tag>            Add tag to file
+  remove <file> <tag>         Remove tag
+  tags <file>                 List tags for a file
+  ls                          List all tags
+  find any <t1> [t2...]       Find files matching ANY tag (OR)
+  find all <t1> [t2...]       Find files matching ALL tags (AND)
+EOF
+}
+
+# Dispatcher
+case "$1" in
+    init) init ;;
+    add) add_tag "$2" "$3" ;;
+    remove) remove_tag "$2" "$3" ;;
+    tags) list_file_tags "$2" ;;
+    ls) list_all_tags ;;
+    find)
+        case "$2" in
+            any) shift 2; find_by_tags_any "$@" ;;
+            all) shift 2; find_by_tags_all "$@" ;;
+            *) echo "Unknown find mode";;
+        esac ;;
+    *) show_help ;;
+esac
