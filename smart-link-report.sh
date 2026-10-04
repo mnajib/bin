@@ -1,17 +1,29 @@
 #!/usr/bin/env bash
-# smart-link-report.sh (v4) -- compare link-health counters across SATA disks
-#                              and relate them to the zpool layout
+# smart-link-report.sh (v5) -- compare link-health counters across SATA disks,
+#                              relate them to the zpool layout, and track growth
 #
-# usage:  sudo ./smart-link-report.sh [disk-path ...]
-#         (no args = every whole disk under /dev/disk/by-id/ata-*)
-#         pass /dev/disk/by-id/... paths, so names match zpool status
+# usage:  sudo ./smart-link-report.sh [--diff] [--save] [--zpool-file FILE] [disk-path ...]
 #
-# output sections:
+#   (no flag)         full report: sections 1-5
+#   --save            full report, then store the counters as the new baseline
+#   --diff            growth since the saved baseline only: sections G1-G3
+#   --diff --save     growth, then store a new baseline (good for a weekly run)
+#   --zpool-file FILE read zpool status text from FILE instead of running zpool
+#                     (for testing the parser with a saved or hand-made status)
+#   disk-path         pass /dev/disk/by-id/... paths, so names match zpool status
+#                     (no paths = every whole disk under /dev/disk/by-id/ata-*)
+#
+# full report sections:
 #   1. TABLE       full numbers, incl. rates per 1000 power-on hours
 #   2. CHARTS      ASCII bar charts, worst disk first
 #   3. VERDICT     OK / WATCH / SUSPECT / NO-DATA per disk, with its pool role
 #   4. POOLS       per-pool summary from zpool status -v (members, spares)
 #   5. KESIMPULAN  counts and suggested actions
+#
+# growth sections (--diff):
+#   G1. GROWTH TABLE   counters gained since the baseline
+#   G2. GROWTH CHARTS  bars of NEW mid-command resets / timeouts
+#   G3. KESIMPULAN     STABLE / GROWING / NEW / GONE / RESET? and what it suggests
 #
 # columns:
 #   POH      = SMART attr 9 Power_On_Hours
@@ -23,6 +35,7 @@
 #   ASR      = Number of ASR Events (lifetime)
 #   COMRESET = SATA Phy COMRESET count (since last drive power-on)
 #   CRC      = Number of Interface CRC Errors (lifetime)
+#   dXXX     = value now minus value at the baseline (dPOH = hours powered on)
 #
 # '-' means the drive does not report that value (older drives often
 # lack the Device Statistics log).
@@ -30,6 +43,63 @@
 # record format (TAB separated, one line per disk):
 #   1 short-name  2 poh  3 cmd_tmo  4 rst_mid  5 hw_rst  6 asr
 #   7 comreset    8 crc  9 full by-id name
+#
+# baseline file: line 1 = "#" + save time, then one record per disk
+#
+#-------------------------------------------------------------------------------
+#
+# Example usage workflow
+#
+#  STEP 1  update the script, then test the parser:
+#            sudo ./smart-link-report.sh --zpool-file /tmp/zpool-degraded.txt
+#
+#  STEP 2  normal run, then store today as week 0 (t0):
+#            sudo ./smart-link-report.sh --save
+#
+#  STEP 3  quick check any time, growth only, baseline untouched:
+#            sudo ./smart-link-report.sh --diff
+#
+#  STEP 4  weekly routine, growth first, then roll the baseline forward:
+#            sudo ./smart-link-report.sh --diff --save
+#
+#
+# Example scenarios
+#
+#   SCENARIO 1: a week passes, DLPE shows dRST = 0, everything else STABLE
+#    --> the stalls stopped. Keep the Path 2 plan; no rush to buy.
+#
+#  SCENARIO 2: DLPE shows dRST = 7, all other disks STABLE
+#    --> the problem is still there and it is isolated to that disk (or its
+#        cable and bay). This supports replacing it when the new disk arrives.
+#
+#  SCENARIO 3: DLPE and Toshiba 57L7 both GROWING in the same week
+#    --> two disks stalling together point at something shared (HBA port,
+#        power, backplane), so buying a disk alone will not fix it.
+#
+#  SCENARIO 4: you run the zpool replace, then --diff
+#    --> the new disk shows NEW, and DLPE shows GONE or a ROLE change.
+#        Run --save again to start a clean baseline.
+#
+# Example usage plan
+#
+#   1. Run --save right after you update the script, so the baseline is "just
+#      after the incident". Otherwise you're comparing against nothing.
+#
+#   2. Weekly is enough. The counters are cumulative, so even a daily check
+#      wouldn't catch anything weekly would miss, only sooner. Daily only helps
+#      if you're about to decide quickly.
+#
+#   3. Keep --diff without --save for ad-hoc checks, because --save overwrites
+#      the baseline and you lose the longer comparison window. If you want to
+#      keep older baselines, copy baseline.tsv somewhere before a roll.
+#
+#   4. 4GROW_MIN=1 is deliberately strict. One new reset flags the disk. If
+#      that turns noisy, raise it to 3 or 5.
+#
+#-------------------------------------------------------------------------------
+#
+
+
 set -euo pipefail
 
 # ---------------------------------------------------------------
@@ -40,7 +110,11 @@ readonly RST_KH_WARN=5         # mid-cmd resets per 1000 h: >= this -> WATCH
 readonly RST_KH_BAD=20         # mid-cmd resets per 1000 h: >= this -> SUSPECT
 readonly SPARE_TARGET=2        # wanted number of HEALTHY free spares per pool
                                # (only checked for pools that have spares)
+readonly GROW_MIN=1            # a stall counter that gained >= this -> GROWING
+readonly SNAP_DIR=/var/lib/smart-link-report
+readonly BASELINE="$SNAP_DIR/baseline.tsv"
 readonly ROW_FMT='%-28s %-7s %-9s %-8s %-7s %-8s %-7s %-6s %-9s %-5s\n'
+readonly DELTA_FMT='%-28s %-7s %-6s %-6s %-6s %-7s %-6s %s\n'
 
 # ---------------------------------------------------------------
 # PURE FUNCTIONS (stdin -> stdout, no side effects)
@@ -156,6 +230,7 @@ pure_verdict() {
 pure_marks() { awk -F'\t' 'NF { printf "%s=%s;", $2, $3 }'; }
 
 # pure_bars :: Title -> Marks -> Pairs -> Chart
+# a bar is flagged when its disk has status SUSPECT, WATCH, GROWING or RESET?
 pure_bars() {
   local title="$1" marks="$2"
   sort -t$'\t' -k1,1 -rn | awk -F'\t' -v t="$title" -v w="$BAR_WIDTH" -v marks="$marks" '
@@ -173,7 +248,8 @@ pure_bars() {
         if (v[i] > 0 && len == 0) len = 1
         bar = ""
         for (j = 0; j < len; j++) bar = bar "#"
-        tag = (st[n[i]] == "SUSPECT" || st[n[i]] == "WATCH") ? "  <-- " st[n[i]] : ""
+        s = st[n[i]]
+        tag = (s == "SUSPECT" || s == "WATCH" || s == "GROWING" || s == "RESET?") ? "  <-- " s : ""
         printf fmt, n[i], bar, v[i], tag
       }
     }'
@@ -342,6 +418,132 @@ pure_report() {
   printf '%s\n' "${advice:-  (nothing to do)}"
 }
 
+# pure_baseline_date :: BaselineText -> Text   (line 1 is "#<save time>")
+pure_baseline_date() { awk 'NR == 1 && /^#/ { print substr($0, 2); exit }'; }
+
+# pure_delta :: Tagged(B,C) -> DeltaRecords
+# B = baseline records (plus its "#date" line), C = current records
+# DeltaRecord = TAB separated:
+#   1 by-id  2 short-name  3 dPOH  4 dRST  5 dTMO  6 dCRC  7 dHW  8 dASR  9 STATUS
+# STATUS is decided from dRST, dTMO, dCRC only (dHW and dASR are noisy here)
+pure_delta() {
+  awk -F'\t' -v gmin="$GROW_MIN" '
+    function num(x)  { return x ~ /^[0-9]+$/ }
+    function last(s,   n, a) { n = split(s, a, "/"); return a[n] }
+    function diff(a, b) { return (num(a) && num(b)) ? b - a : "-" }
+    $1 == "B" && substr($2, 1, 1) == "#" { next }
+    $1 == "B" {
+      nb++; bid[nb] = $10; bsh[$10] = $2
+      bpoh[$10] = $3; btmo[$10] = last($4); brst[$10] = $5
+      bhw[$10] = $6; basr[$10] = $7; bcrc[$10] = $9
+      next
+    }
+    $1 == "C" {
+      nc++; cid[nc] = $10; cur[$10] = 1
+      csh[nc] = $2; cpoh[nc] = $3; ctmo[nc] = last($4); crst[nc] = $5
+      chw[nc] = $6; casr[nc] = $7; ccrc[nc] = $9
+    }
+    END {
+      for (i = 1; i <= nc; i++) {
+        d = cid[i]
+        if (!(d in bsh)) {
+          printf "%s\t%s\t-\t-\t-\t-\t-\t-\tNEW\n", d, csh[i]
+          continue
+        }
+        dpoh = diff(bpoh[d], cpoh[i]); drst = diff(brst[d], crst[i])
+        dtmo = diff(btmo[d], ctmo[i]); dcrc = diff(bcrc[d], ccrc[i])
+        dhw  = diff(bhw[d], chw[i]);   dasr = diff(basr[d], casr[i])
+        avail = 0; grow = 0; neg = 0
+        split(drst " " dtmo " " dcrc, v, " ")
+        for (k = 1; k <= 3; k++) {
+          if (v[k] == "-") continue
+          avail++
+          if (v[k] < 0)     neg++
+          if (v[k] >= gmin) grow++
+        }
+        s = neg ? "RESET?" : (avail == 0 ? "NO-DATA" : (grow ? "GROWING" : "STABLE"))
+        printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", d, csh[i], dpoh, drst, dtmo, dcrc, dhw, dasr, s
+      }
+      for (i = 1; i <= nb; i++) {
+        d = bid[i]
+        if (!(d in cur)) printf "%s\t%s\t-\t-\t-\t-\t-\t-\tGONE\n", d, bsh[d]
+      }
+    }'
+}
+
+# pure_delta_header :: Text
+pure_delta_header() {
+  # shellcheck disable=SC2059
+  printf "$DELTA_FMT" DISK dPOH dRST dTMO dCRC dHW dASR STATUS
+}
+
+# pure_delta_table :: DeltaRecords -> Rows
+pure_delta_table() {
+  awk -F'\t' -v fmt="$DELTA_FMT" 'NF { printf fmt, $2, $3, $4, $5, $6, $7, $8, $9 }'
+}
+
+# pure_delta_metric :: Kind -> DeltaRecords -> Pairs     ("value<TAB>name")
+# Kind = rst | tmo     (only non-negative numeric deltas are charted)
+pure_delta_metric() {
+  awk -F'\t' -v k="$1" '
+    NF {
+      v = (k == "rst") ? $4 : $5
+      if (v ~ /^[0-9]+$/) printf "%.1f\t%s\n", v, $2
+    }'
+}
+
+# pure_delta_marks :: DeltaRecords -> Text      ("short=STATUS;short=STATUS;...")
+pure_delta_marks() { awk -F'\t' 'NF { printf "%s=%s;", $2, $9 }'; }
+
+# pure_growth_conclusion :: DeltaRecords -> Text   (the growth KESIMPULAN)
+pure_growth_conclusion() {
+  awk -F'\t' '
+    NF { total++; c[$9]++; names[$9] = names[$9] " " $2 }
+    END {
+      printf "Disks compared : %d  (STABLE %d, GROWING %d, NEW %d, GONE %d, RESET? %d, NO-DATA %d)\n",
+             total, c["STABLE"], c["GROWING"], c["NEW"], c["GONE"], c["RESET?"], c["NO-DATA"]
+      if (c["GROWING"] >= 2)
+        printf "GROWING        :%s\n  -> %d disks stalled in the same interval: suspect something shared (HBA port, power, backplane) before blaming the disks\n", names["GROWING"], c["GROWING"]
+      else if (c["GROWING"] == 1)
+        printf "GROWING        :%s\n  -> one disk only: suspect that disk, its cable or its bay\n", names["GROWING"]
+      else
+        print "GROWING        : none -- no new stalls since the baseline"
+      if (c["GONE"])
+        printf "GONE           :%s\n  -> was in the baseline but not found now: check cabling and zpool status\n", names["GONE"]
+      if (c["RESET?"])
+        printf "RESET?         :%s\n  -> a counter went DOWN (disk swapped or counters wiped): save a fresh baseline\n", names["RESET?"]
+      if (c["NEW"])
+        printf "NEW            :%s\n  -> not in the baseline yet: compared from the next --save\n", names["NEW"]
+    }'
+}
+
+# pure_growth_report :: Baseline -> Records -> Report
+# (baseline text comes as an argument, current records on stdin)
+pure_growth_report() {
+  local base="$1" recs bdate tagged deltas marks
+  recs=$(cat)
+  if [[ -z "$base" ]]; then
+    echo "no baseline yet: run  sudo ./smart-link-report.sh --save  first"
+    return 0
+  fi
+  bdate=$(pure_baseline_date <<<"$base")
+  tagged=$(pure_tag B <<<"$base"; pure_tag C <<<"$recs")
+  deltas=$(pure_delta <<<"$tagged")
+  marks=$(pure_delta_marks <<<"$deltas")
+
+  pure_title "G1. GROWTH TABLE (counters gained since baseline saved ${bdate:-?})"
+  pure_delta_header
+  pure_delta_table <<<"$deltas"
+
+  pure_title "G2. GROWTH CHARTS (only NEW events count)"
+  pure_delta_metric rst <<<"$deltas" | pure_bars "dRST (new mid-command resets)" "$marks"
+  printf '\n'
+  pure_delta_metric tmo <<<"$deltas" | pure_bars "dTMO (new command timeouts)" "$marks"
+
+  pure_title "G3. KESIMPULAN / CONCLUSION"
+  pure_growth_conclusion <<<"$deltas"
+}
+
 # ---------------------------------------------------------------
 # IO FUNCTIONS (touch the system)
 # ---------------------------------------------------------------
@@ -357,8 +559,12 @@ io_list_disks() {
 # io_probe :: Path -> IO Text  (smartctl exit code is a bitmask; ignore it)
 io_probe() { smartctl -x "$1" 2>/dev/null || true; }
 
-# io_zpool_status :: IO Text   (empty text if zpool is missing)
-io_zpool_status() { zpool status -v 2>/dev/null || true; }
+# io_zpool_status :: Maybe FilePath -> IO Text
+# a given file replaces the real command; empty text if zpool is missing
+io_zpool_status() {
+  local file="${1:-}"
+  if [[ -n "$file" ]]; then cat "$file"; else zpool status -v 2>/dev/null || true; fi
+}
 
 # io_record_one :: Path -> IO Record
 io_record_one() {
@@ -370,12 +576,55 @@ io_disks_from_args() {
   if [[ $# -gt 0 ]]; then printf '%s\n' "$@"; else io_list_disks; fi
 }
 
-# io_main :: [Path] -> IO ()
+# io_collect_records :: [Path] -> IO Records
+io_collect_records() {
+  io_disks_from_args "$@" | while read -r d; do io_record_one "$d"; done
+}
+
+# io_read_baseline :: IO Text   (empty text if there is no baseline yet)
+io_read_baseline() {
+  if [[ -r "$BASELINE" ]]; then cat "$BASELINE"; fi
+}
+
+# io_save_baseline :: Records -> IO ()
+# writes to a temp file first, then moves it, so a crash never leaves half a baseline
+io_save_baseline() {
+  local tmp
+  mkdir -p "$SNAP_DIR"
+  tmp=$(mktemp "$SNAP_DIR/.baseline.XXXXXX")
+  { printf '#%s\n' "$(date --iso-8601=seconds)"; cat; } > "$tmp"
+  mv -f "$tmp" "$BASELINE"
+  echo "baseline saved: $BASELINE"
+}
+
+# io_main :: [Arg] -> IO ()
 io_main() {
+  local want_diff=0 want_save=0 zfile="" disks=() recs roles base
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --diff)        want_diff=1 ;;
+      --save)        want_save=1 ;;
+      --zpool-file)  zfile="${2:?--zpool-file needs a FILE}"; shift ;;
+      *)             disks+=("$1") ;;
+    esac
+    shift
+  done
+
   [[ $EUID -eq 0 ]] || { echo "run with sudo: smartctl needs root" >&2; return 1; }
-  local roles
-  roles=$(io_zpool_status | pure_pool_roles)
-  io_disks_from_args "$@" | while read -r d; do io_record_one "$d"; done | pure_report "$roles"
+
+  recs=$(io_collect_records "${disks[@]}")
+
+  if [[ $want_diff -eq 1 ]]; then
+    base=$(io_read_baseline)
+    pure_growth_report "$base" <<<"$recs"
+  else
+    roles=$(io_zpool_status "$zfile" | pure_pool_roles)
+    pure_report "$roles" <<<"$recs"
+  fi
+
+  if [[ $want_save -eq 1 ]]; then
+    io_save_baseline <<<"$recs"
+  fi
 }
 
 io_main "$@"
